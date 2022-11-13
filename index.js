@@ -10,10 +10,10 @@ startGame.enter(async ctx => {
     try {
         let chat = await collection.findOne({chat_id: ctx.chat.id});
         if(chat == null) {
-            let chtop = await collection.findOne({_id: ObjectId('63660b4aafcbb5908ea11437')});
+            let chtop = await collection.findOne({_id: ObjectId('636e7752c7ac7456a91fb889')});
             let chres = await chtop.rooms + 1
-            await collection.findOneAndUpdate({_id: ObjectId('63660b4aafcbb5908ea11437')}, {$set: {rooms: chres}});
-            let roomc = await collection.findOne({_id: ObjectId('63660b4aafcbb5908ea11437')})
+            await collection.findOneAndUpdate({_id: ObjectId('636e7752c7ac7456a91fb889')}, {$set: {rooms: chres}});
+            let roomc = await collection.findOne({_id: ObjectId('636e7752c7ac7456a91fb889')})
             await collection.insertOne(
                 {
                     room: roomc.rooms,
@@ -26,14 +26,14 @@ startGame.enter(async ctx => {
                     sofmi: 0  
                 }
             ) 
-            let tstart = await ctx.replyWithPhoto({source: './preview.png'}, {
+            let tstart = await ctx.replyWithPhoto({source: './Preview.jpg'}, {
                 ...Markup.inlineKeyboard(
                     [
                         [Markup.button.callback('🔁 Присоединиться', 'joinnext')]
                     ]
                 ), caption: `Ожидание игроков...`
             })
-            await collection.findOneAndUpdate({chat_id: ctx.chat.id}, {$set: {tst: `${tstart.message_id}`}}) 
+            await collection.findOneAndUpdate({chat_id: ctx.chat.id}, {$set: {tst: tstart.message_id}}) 
         }else {
             await ctx.tg.deleteMessage(ctx.chat.id, ctx.message.message_id)  
         }
@@ -108,24 +108,13 @@ const speak = new Scenes.BaseScene("speak");
 
 speak.enter(async (ctx) => {
     try {
-        await ctx.reply('Игра началась!\nВы можете переговориться о будущем обмене карт или оставить все по прежне. Удачи!')
-        setTimeout(async () => {
-            await ctx.scene.enter("quiz")   
-        }, 180000) /* 180000 */
+        await ctx.reply('Игра началась!\nВы можете переговориться о будущем обмене карт или оставить все по прежне. Удачи!\n\nЕсли вы готовы принять решение то введите команду /skip')
     }catch(e) {
         console.error(e);
     }
 })
 
-speak.on('message', async ctx => {
-    let user = await collection.findOne({chat_id: ctx.message.from.id})/* user_id */
-    if (user.players[0].user_id || user.players[1].user_id == ctx.message.from.username) {
-        return
-    }else {
-        await ctx.tg.deleteMessage(user.chat_id, ctx.message.message_id)
-    }
 
-})
 
 // SCENE QUIZ
 
@@ -136,14 +125,14 @@ quiz.enter(async (ctx) => {
         let findch = await collection.findOne({chat_id: ctx.chat.id});
         if(findch.forfirst == true) {
             let tofu = await ctx.telegram.sendMessage(findch.players[0].perschat, 'Хочешь поменять карты?', {
-                ...Markup.inlineKeyboard(
+                ...Markup.inlineKeyboard(  
                     [
                         [Markup.button.callback('Да, меняй', 'ye'), Markup.button.callback('Нет, оставим', 'non')]
                     ]
                 ).resize().oneTime()
             });
-            await collection.findOneAndUpdate({chat_id: ctx.chat.id}, {$set: {tofmi: `${tofu.message_id}`}});
-            await ctx.replyWithHTML(`@${findch.players[0].user_name}, пришло время действовать...\n\nПерейдите в лс <a href="https://t.me/dprodqbot">боту</a> и примите решение...\nВсе зависит только от вас!`);
+            await collection.findOneAndUpdate({chat_id: ctx.chat.id}, {$set: {tofmi: tofu.message_id}});
+            await ctx.replyWithHTML(`@${findch.players[0].user_name}, пришло время действовать...\n\nПерейдите в лс <a href="https://t.me/cheatandtake_bot">боту</a> и примите решение...\nВсе зависит только от вас!`);
         }else if(findch.forsecond == true) {
             let tosu = await ctx.telegram.sendMessage(findch.players[1].perschat, 'Хочешь поменять карты?', {
                 ...Markup.inlineKeyboard(
@@ -152,8 +141,8 @@ quiz.enter(async (ctx) => {
                     ]
                 ).resize().oneTime()
             });
-            await collection.findOneAndUpdate({chat_id: ctx.chat.id}, {$set: {sofmi: `${tosu.message_id}`}});
-            await ctx.replyWithHTML(`@${findch.players[1].user_name}, пришло время действовать...\n\nПерейдите в лс <a href="https://t.me/dprodqbot">боту</a> и примите решение...\nВсе зависит только от вас!`);
+            await collection.findOneAndUpdate({chat_id: ctx.chat.id}, {$set: {sofmi: tosu.message_id}});
+            await ctx.replyWithHTML(`@${findch.players[1].user_name}, пришло время действовать...\n\nПерейдите в лс <a href="https://t.me/cheatandtake_bot">боту</a> и примите решение...\nВсе зависит только от вас!`);
         }else {
             return
         }
@@ -175,11 +164,11 @@ results.enter(async ctx => {
             let card = await collection.findOne({firschatid: cht.firschatid})
             setTimeout(async () => {
                 await ctx.tg.sendPhoto(card.chat_id, {source: card.fpr}, {caption: `Карта первого участника @${card.players[0].user_name}`})
-                await ctx.tg.sendPhoto(card.chat_id, {source: card.spr}, {caption: `Карта первого участника @${card.players[1].user_name}`})
+                await ctx.tg.sendPhoto(card.chat_id, {source: card.spr}, {caption: `Карта второго участника @${card.players[1].user_name}`})
                 if(card.fpr == './M.png') {
-                    await ctx.tg.sendMessage(card.chat_id, `Победитель:\n@${card.players[0].user_name} Money - +100$`)
+                    await ctx.tg.sendMessage(card.chat_id, `Победитель:\n@${card.players[0].user_name}`)
                 }else {
-                    await ctx.tg.sendMessage(card.chat_id, `Победитель:\n@${card.players[1].user_name} Money - +100$`)
+                    await ctx.tg.sendMessage(card.chat_id, `Победитель:\n@${card.players[1].user_name}`)
                 }
                 await ctx.scene.enter('leaves')
             }, 3000)
@@ -188,11 +177,11 @@ results.enter(async ctx => {
             let card = await collection.findOne({secondchatid: chts.secondchatid})
             setTimeout(async () => {
                 await ctx.tg.sendPhoto(card.chat_id, {source: card.fpr}, {caption: `Карта первого участника @${card.players[0].user_name}`})
-                await ctx.tg.sendPhoto(card.chat_id, {source: card.spr}, {caption: `Карта первого участника @${card.players[1].user_name}`})
+                await ctx.tg.sendPhoto(card.chat_id, {source: card.spr}, {caption: `Карта второго участника @${card.players[1].user_name}`})
                 if(card.fpr == './M.png') {
-                    await ctx.tg.sendMessage(card.chat_id, `Победитель:\n@${card.players[0].user_name} Money - +100$`)
+                    await ctx.tg.sendMessage(card.chat_id, `Победитель:\n@${card.players[0].user_name}`)
                 }else {
-                    await ctx.tg.sendMessage(card.chat_id, `Победитель:\n@${card.players[1].user_name} Money - +100$`)
+                    await ctx.tg.sendMessage(card.chat_id, `Победитель:\n@${card.players[1].user_name}`)
                 }
                 await ctx.scene.enter('leaves')
             }, 3000)
@@ -252,9 +241,9 @@ const leaves = new Scenes.BaseScene("leaves");
 
 leaves.enter(async ctx => {
     try {
-        let rest = await collection.findOne({_id: ObjectId('63660b4aafcbb5908ea11437')})
+        let rest = await collection.findOne({_id: ObjectId('636e7752c7ac7456a91fb889')})
         let res = await rest.rooms - 1;
-        await collection.findOneAndUpdate({_id: ObjectId('63660b4aafcbb5908ea11437')}, {$set: {rooms: res}});
+        await collection.findOneAndUpdate({_id: ObjectId('636e7752c7ac7456a91fb889')}, {$set: {rooms: res}});
         let cht = await collection.findOne({firschatid: ctx.chat.id});
         let chts = await collection.findOne({secondchatid: ctx.chat.id});    
         if(cht != null) {
@@ -286,63 +275,122 @@ const stage = new Scenes.Stage([startGame, game, tofp, speak, quiz, results, res
 bot.use(session());
 bot.use(stage.middleware());  
 bot.launch({dropPendingUpdates: true});
-bot.help((ctx) => ctx.reply('/newGame - для старта игры!'));
+bot.help((ctx) => ctx.reply('/newGame - для старта игры!\n➖➖➖➖➖➖➖➖➖➖\n\n/rules - правила игры\n\nPowered by @OG_DIMES'));
 bot.command('newgame', async ctx => {  
-    if(ctx.chat.type == 'supergroup') {
-        let myrgh = await ctx.tg.getChatAdministrators(ctx.chat.id)
-        let me = await ctx.tg.getMe()
-        let mee = me.id;
-        for (let i = 0; i < myrgh.length; i++) {
-            if(myrgh[i].user.id == mee) {
-                let gameinchat = await collection.findOne({chat_id: ctx.chat.id})
-                if(gameinchat == null) {
-                    await ctx.tg.deleteMessage(ctx.chat.id, ctx.message.message_id)
-                    await ctx.scene.enter("startGame");
+    try {
+        if(ctx.chat.type == 'supergroup') {
+            let myrgh = await ctx.tg.getChatAdministrators(ctx.chat.id)
+            let me = await ctx.tg.getMe()
+            let mee = me.id;
+            for (let i = 0; i < myrgh.length; i++) {
+                if(myrgh[i].user.id == mee) {
+                    let gameinchat = await collection.findOne({chat_id: ctx.chat.id})
+                    if(gameinchat == null) {
+                        await ctx.tg.deleteMessage(ctx.chat.id, ctx.message.message_id)
+                        await ctx.scene.enter("startGame");
+                    }else {
+                        await ctx.reply('В данной группе идет игра! Ожидайте окончания...')
+                    }
+                    break
                 }else {
-                    await ctx.reply('В данной группе идет игра! Ожидайте окончания...')
+                    await ctx.reply('Права администратора не выданы:\n➖➖➖➖➖➖➖➖➖➖\nУдалять сообщения  ❌')
+                    break
                 }
-                break
-            }else {
-                await ctx.reply('Права администратора не выданы:\n➖➖➖➖➖➖➖➖➖➖\nУдалять сообщения  ❌')
-                break
             }
+        }else {
+            await ctx.reply('Используйте даную команду в групповом чате')
         }
-    }else {
-        await ctx.reply('Используйте даную команду в групповом чате')
+    }catch(e) {
+        console.error(e);
+    }
+   
+})
+
+bot.command('skip', async ctx => {
+    try {
+        if(ctx.chat.type == 'supergroup') {
+            let chat = await collection.findOne({chat_id: ctx.chat.id})
+            if(chat == null) {
+                await ctx.reply('Я не обнаружил игру в данной группе...');
+            }else {
+                let quatofsk = await collection.findOne({chat_id: ctx.chat.id})
+                if(quatofsk.quatofsk == undefined) {
+                    await ctx.scene.enter('quiz')
+                    await collection.findOneAndUpdate({chat_id: ctx.chat.id}, {$set: {quatofsk: 'yes'}})
+                }else {
+                    await ctx.reply("Ожидайте выбор соперника...")
+                }
+                
+            }
+        }else {
+            await ctx.reply('Используйте даную команду в групповом чате');
+        }
+        
+    }catch(e) {
+        console.error(e);
     }
 })
 
 bot.command('rules', async ctx => {
     try {
-        await ctx.reply('Двум участникам раздают рандомно две разный карты, после чего одному из участнику можно будет посмотреть на свою карту и убедить соперника обменять карты или оставить все как есть.\nГлавное для обеих участников в конце раунда остаться с деньгами а не с картой X')
+        await ctx.replyWithPhoto({source: './Preview.jpg'}, {...Markup.inlineKeyboard([[Markup.button.callback('🖲 Запустить игру', 'stgame')]]), caption: 'Двум участникам рандомно раздают две разные карты, после чего одному из участников можно будет посмотреть на свою карту и убедить соперника обменять карты или оставить все как есть но обменивает карты тот, кому не дали посмотреть на свою карту.\nГлавное для участников в конце раунда остаться с деньгами а не с картой с черепом!'})
     }catch(e) {
         console.error(e);
     }
 })
 
 bot.hears(['/start'], async ctx => {
-    await ctx.replyWithHTML(`Приветствую вас <b>${ctx.message.from.first_name}</b>!\nЯ бот который введу игру ОБМАНУЛ - ПОЛУЧИЛ\nДля начала добавь меня в группу`, Markup.inlineKeyboard([[Markup.button.url('Добавить бота в группу 🌐', 'https://t.me/cheatandtake_bot?startgroup=true')]]))
+    await ctx.replyWithHTML(`🪓 ПСЕВДОБОЛИЯ 💸\nДобро пожаловать мой СКАМЕрр!\nЯ ведущий данной игры, приятно познакомиться!\n/rules - правила игры\nДля начала добавь меня в группу:`, Markup.inlineKeyboard([[Markup.button.url('Добавить бота в группу 🌐', 'https://t.me/cheatandtake_bot?startgroup=true')]]))
 })
 
 // ACTIONS
 
+bot.action('stgame', async ctx => {
+    try {
+        if(ctx.chat.type == 'supergroup') {
+            let myrgh = await ctx.tg.getChatAdministrators(ctx.chat.id)
+            let me = await ctx.tg.getMe()
+            let mee = me.id;
+            for (let i = 0; i < myrgh.length; i++) {
+                if(myrgh[i].user.id == mee) {
+                    let gameinchat = await collection.findOne({chat_id: ctx.chat.id})
+                    if(gameinchat == null) {
+                        await ctx.tg.deleteMessage(ctx.chat.id, ctx.callbackQuery.message.message_id)
+                        await ctx.scene.enter("startGame");
+                    }else {
+                        await ctx.answerCbQuery('В данной группе идет игра! Ожидайте окончания...', {show_alert: false})
+                    }
+                    break
+                }else {
+                    await ctx.reply('Права администратора не выданы:\n➖➖➖➖➖➖➖➖➖➖\nУдалять сообщения  ❌')
+                    break
+                }
+            }
+        }else {
+            await ctx.answerCbQuery('Используйте даную кнопку в групповом чате', {show_alert: false})
+        }
+    }catch(e) {
+        console.error(e);  
+    }
+})
+
 bot.action('joinnext', async ctx => {
     try {
         let findch = await collection.findOne({chat_id: ctx.chat.id});
-        let editedmsg = await ctx.telegram.editMessageCaption(ctx.chat.id, findch.tst, ctx.callbackQuery.inline_message_id, `Ожидание игроков:`, {
+        let editedmsg = await ctx.telegram.editMessageCaption(ctx.chat.id, findch.tst, ctx.callbackQuery.inline_message_id, `...`, {
             ...Markup.inlineKeyboard([[Markup.button.url('🔁 Присоединиться', 'https://t.me/cheatandtake_bot?start=G')]])
         })
         bot.start(async (ctxx) => {
                 await collection.findOneAndUpdate({chat_id: ctx.chat.id}, {$push: {players: {user_name: ctxx.message.from.username, user_id: ctxx.message.from.id, perschat: ctxx.chat.id}}})
                 let sfin = await collection.findOne({chat_id: ctx.chat.id});
-                let getcmem = await ctxx.tg.getChatMember(findch.chat_id, sfin.players[0].user_id)
+                let getcmem = await ctxx.tg.getChatMember(sfin.chat_id, ctxx.message.from.id)
                 if(getcmem) {
                     await ctxx.replyWithHTML(`Вы присоеденились к игре: <b>${ctx.chat.title}</b>`)
                 }else {
                     return
                 }
                 if(sfin.players.length == 1) {
-                    let chmsg = await ctx.telegram.editMessageCaption(ctx.chat.id, findch.tst, ctx.callbackQuery.inline_message_id, `Игроки: @${sfin.players[0].user_name}`, {
+                    await ctx.telegram.editMessageCaption(ctx.chat.id, sfin.tst, ctx.callbackQuery.inline_message_id, `Игроки:\n@${sfin.players[0].user_name}`, {
                         ...Markup.inlineKeyboard([[Markup.button.url('🔁 Присоединиться', 'https://t.me/cheatandtake_bot?start=G')]])})
                     await collection.findOneAndUpdate({chat_id: ctx.chat.id}, {$set: {firschatid: ctxx.chat.id}})
                 }else {
@@ -353,7 +401,7 @@ bot.action('joinnext', async ctx => {
     }catch(e) {
         console.error(e);
     }  
-}) 
+})   
 
 
 bot.action("non", async ctx => {
