@@ -37,19 +37,28 @@ startGame.enter(async ctx => {
             await collection.findOneAndUpdate({chat_id: ctx.chat.id}, {$set: {tst: tstart.message_id}});
             await setTimeout(async () => {
                 let tmwarn = await collection.findOne({chat_id: ctx.chat.id});
-                if(tmwarn.startgameend == 'no') {
-                    await ctx.reply('🛑 Осталось 30 сек. до окончания набора')
-                    await setTimeout(async () => {
-                        let tmwarnend = await collection.findOne({chat_id: ctx.chat.id});
-                        if(tmwarnend.startgameend == 'no') {
-                            await ctx.reply('🛑 Набор в игру завершен а так же игра')
-                        }else {
-                            return
-                        }
-                    }, 30000)
-                }else {
+                if(tmwarn == null) {
                     return
+                }else {
+                    if(tmwarn.startgameend == 'no') {
+                        await ctx.reply('🛑 Осталось 30 сек. до окончания набора')
+                        await setTimeout(async () => {
+                            let tmwarnend = await collection.findOne({chat_id: ctx.chat.id});
+                            if (tmwarnend == null) {
+                                return
+                            } else {
+                                if(tmwarnend.startgameend == 'no') {
+                                    await ctx.reply('🛑 Набор в игру завершен. Игра окончена!')
+                                }else {
+                                    return
+                                }
+                            }
+                        }, 30000)
+                    }else {
+                        return
+                    }
                 }
+                
             }, 60000) 
         }else {
             await ctx.tg.deleteMessage(ctx.chat.id, ctx.message.message_id)  
