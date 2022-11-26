@@ -424,7 +424,6 @@ bot.action('joinnext', async ctx => {
         await collection.findOneAndUpdate({chat_id: ctx.chat.id}, {$set: {tst: editedmsg.message_id}})
         bot.start(async (ctxx) => {
             let useringame = await collection.findOne({players: {user_name: ctxx.message.from.username, user_id: ctxx.message.from.id, perschat: ctxx.chat.id, name: ctxx.message.from.first_name}})
-            console.log(useringame);
             if (useringame == null) {
                 await collection.findOneAndUpdate({chat_id: ctx.chat.id}, {$push: {players: {user_name: ctxx.message.from.username, user_id: ctxx.message.from.id, perschat: ctxx.chat.id, name: ctxx.message.from.first_name}}})
                 let sfin = await collection.findOne({chat_id: ctx.chat.id});
