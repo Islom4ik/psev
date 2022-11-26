@@ -41,14 +41,18 @@ startGame.enter(async ctx => {
                     return
                 }else {
                     if(tmwarn.startgameend == 'no') {
-                        await ctx.reply('🛑 Осталось 30 сек. до окончания набора')
+                        await ctx.reply('🛑 Осталось 30 сек. до окончания набора:', {reply_to_message_id: tmwarn.tst})
                         await setTimeout(async () => {
                             let tmwarnend = await collection.findOne({chat_id: ctx.chat.id});
                             if (tmwarnend == null) {
                                 return
-                            } else {
+                            }else {
                                 if(tmwarnend.startgameend == 'no') {
                                     await ctx.reply('🛑 Набор в игру завершен. Игра окончена!')
+                                    let roomscont = await collection.findOne({_id: ObjectId('636e7752c7ac7456a91fb889')})
+                                    let res = await roomscont.rooms - 1;
+                                    await collection.findOneAndUpdate({_id: ObjectId('636e7752c7ac7456a91fb889')}, {$set: {rooms: res}})
+                                    await collection.findOneAndDelete({chat_id: tmwarnend.chat_id})
                                 }else {
                                     return
                                 }
@@ -406,6 +410,7 @@ bot.action('joinnext', async ctx => {
         let editedmsg = await ctx.telegram.editMessageCaption(ctx.chat.id, findch.tst, ctx.callbackQuery.inline_message_id, `...`, {
             ...Markup.inlineKeyboard([[Markup.button.url('🔁 Присоединиться', 'https://t.me/cheatandtake_bot?start=G')]])
         })
+        await collection.findOneAndUpdate({chat_id: ctx.chat.id}, {$set: {tst: editedmsg.message_id}})
         bot.start(async (ctxx) => {
                 await collection.findOneAndUpdate({chat_id: ctx.chat.id}, {$push: {players: {user_name: ctxx.message.from.username, user_id: ctxx.message.from.id, perschat: ctxx.chat.id}}})
                 let sfin = await collection.findOne({chat_id: ctx.chat.id});
