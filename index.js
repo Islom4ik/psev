@@ -30,7 +30,7 @@ startGame.enter(async ctx => {
             let tstart = await ctx.replyWithPhoto({source: './Preview.jpg'}, {
                 ...Markup.inlineKeyboard(
                     [
-                        [Markup.button.callback('🔁 Присоединиться', 'joinnext')]
+                        [Markup.button.url('🔁 Присоединиться', `https://t.me/cheatandtake_bot?start=${ctx.chat.id}`)]
                     ]
                 ), caption: `Ожидание игроков...`
             })
@@ -87,10 +87,11 @@ let cards = ['./M.png', './X.png']
 
 game.enter(async (ctx) => {
     try {
-        let findch = await collection.findOne({chat_id: ctx.chat.id});
+        let fromgame = await collection.findOne({players: {user_name: ctx.message.from.username, user_id: ctx.message.from.id, perschat: ctx.chat.id, name: ctx.message.from.first_name}})
+        let findch = await collection.findOne({chat_id: fromgame.chat_id});
         await ctx.tg.deleteMessage(findch.chat_id, findch.tst)
-        await ctx.replyWithHTML(`<a href="tg://user?id=${findch.players[0].user_id}">${findch.players[0].name}</a> 👤 VS 👤 <a href="tg://user?id=${findch.players[1].user_id}">${findch.players[1].name}</a>`);
-        await collection.findOneAndUpdate({chat_id: ctx.chat.id}, {$set: {startgameend: 'yes'}})
+        await ctx.tg.sendMessage(fromgame.chat_id, `<a href="tg://user?id=${findch.players[0].user_id}">${findch.players[0].name}</a> 👤 VS 👤 <a href="tg://user?id=${findch.players[1].user_id}">${findch.players[1].name}</a>`, {parse_mode: "HTML"});
+        await collection.findOneAndUpdate({chat_id: fromgame.chat_id}, {$set: {startgameend: 'yes'}})
         await ctx.scene.enter("tofp");
     }catch(e) {
         console.error(e);
@@ -99,35 +100,35 @@ game.enter(async (ctx) => {
 
 const tofp = new Scenes.BaseScene("tofp");
 
-tofp.enter(async (ctx) => {
+tofp.enter(async (ctx) => {  
     try {
-        let findch = await collection.findOne({chat_id: ctx.chat.id});
+        let fromgame = await collection.findOne({players: {user_name: ctx.message.from.username, user_id: ctx.message.from.id, perschat: ctx.chat.id, name: ctx.message.from.first_name}})
+        let findch = await collection.findOne({chat_id: fromgame.chat_id});
         let random = await getRandomArbitrary(0, 1);
         let whoview = await getRandomArbitrary(0, 1);
         if(random == 1) {
-            await collection.findOneAndUpdate({chat_id: ctx.chat.id}, {$set: {fpr: './M.png'}})
-            await collection.findOneAndUpdate({chat_id: ctx.chat.id}, {$set: {spr: './X.png'}})
+            await collection.findOneAndUpdate({chat_id: fromgame.chat_id}, {$set: {fpr: './M.png'}})
+            await collection.findOneAndUpdate({chat_id: fromgame.chat_id}, {$set: {spr: './X.png'}})
         }else {  
-            await collection.findOneAndUpdate({chat_id: ctx.chat.id}, {$set: {fpr: './X.png'}})
-            await collection.findOneAndUpdate({chat_id: ctx.chat.id}, {$set: {spr: './M.png'}})
+            await collection.findOneAndUpdate({chat_id: fromgame.chat_id}, {$set: {fpr: './X.png'}})
+            await collection.findOneAndUpdate({chat_id: fromgame.chat_id}, {$set: {spr: './M.png'}})
         }  
       
-        let findcar = await collection.findOne({chat_id: ctx.chat.id});
+        let findcar = await collection.findOne({chat_id: fromgame.chat_id});
     
         if(whoview == 0) {
             await ctx.tg.sendPhoto(findcar.players[0].perschat, {source: findcar.fpr}, {caption: 'Вам дали посмотреть вашу карту'});
-            await ctx.replyWithHTML(`👤 Игроку <a href="tg://user?id=${findcar.players[0].user_id}">${findcar.players[0].name}</a> дали возможность посмотреть на свою карту...`)
+            await ctx.tg.sendMessage(findcar.chat_id, `👤 Игроку <a href="tg://user?id=${findcar.players[0].user_id}">${findcar.players[0].name}</a> дали возможность посмотреть на свою карту...`, {parse_mode: "HTML"})
             await ctx.tg.sendPhoto(findcar.players[1].perschat, {source: './q.png'}, {caption: 'Вам неизвестно какая у вас карта'});
-            await collection.findOneAndUpdate({chat_id: ctx.chat.id}, {$set: {forfirst: false}})
-            await collection.findOneAndUpdate({chat_id: ctx.chat.id}, {$set: {forsecond: true}})
+            await collection.findOneAndUpdate({chat_id: fromgame.chat_id}, {$set: {forfirst: false}})
+            await collection.findOneAndUpdate({chat_id: fromgame.chat_id}, {$set: {forsecond: true}})
         }else {
             await ctx.tg.sendPhoto(findcar.players[0].perschat, {source: './q.png'}, {caption: 'Вам неизвестно какая у вас карта'});
             await ctx.tg.sendPhoto(findcar.players[1].perschat, {source: findcar.spr}, {caption: 'Вам дали посмотреть вашу карту'});
-            await ctx.replyWithHTML(`👤 Игроку <a href="tg://user?id=${findcar.players[1].user_id}">${findcar.players[1].name}</a> дали возможность посмотреть на свою карту...`)
-            await collection.findOneAndUpdate({chat_id: ctx.chat.id}, {$set: {forfirst: true}})
-            await collection.findOneAndUpdate({chat_id: ctx.chat.id}, {$set: {forsecond: false}})
+            await ctx.tg.sendMessage(findcar.chat_id, `👤 Игроку <a href="tg://user?id=${findcar.players[1].user_id}">${findcar.players[1].name}</a> дали возможность посмотреть на свою карту...`, {parse_mode: "HTML"})
+            await collection.findOneAndUpdate({chat_id: fromgame.chat_id}, {$set: {forfirst: true}})
+            await collection.findOneAndUpdate({chat_id: fromgame.chat_id}, {$set: {forsecond: false}})
         }
-    
         await ctx.scene.enter("speak")
     }catch(e) {
         console.error(e);
@@ -140,7 +141,8 @@ const speak = new Scenes.BaseScene("speak");
 
 speak.enter(async (ctx) => {
     try {
-        await ctx.reply('💭 Игра началась!\nВы можете переговориться о будущем обмене карт или оставить все по прежне. Удачи!\n\nЕсли вы уже готовы принять решение то введите команду /skip')
+        let fromgame = await collection.findOne({players: {user_name: ctx.message.from.username, user_id: ctx.message.from.id, perschat: ctx.chat.id, name: ctx.message.from.first_name}})
+        await ctx.tg.sendMessage(fromgame.chat_id, '💭 Игра началась!\nВы можете переговориться о будущем обмене карт или оставить все по прежне. Удачи!\n\nЕсли вы уже готовы принять решение то введите команду /skip')
     }catch(e) {
         console.error(e);
     }
@@ -415,40 +417,72 @@ bot.action('stgame', async ctx => {
     }
 })
 
-bot.action('joinnext', async ctx => {
+
+bot.start(async ctx => {
     try {
-        let findch = await collection.findOne({chat_id: ctx.chat.id});
-        let editedmsg = await ctx.telegram.editMessageCaption(ctx.chat.id, findch.tst, ctx.callbackQuery.inline_message_id, `...`, {
-            ...Markup.inlineKeyboard([[Markup.button.url('🔁 Присоединиться', 'https://t.me/cheatandtake_bot?start=G')]])
-        })
-        await collection.findOneAndUpdate({chat_id: ctx.chat.id}, {$set: {tst: editedmsg.message_id}})
-        bot.start(async (ctxx) => {
-            let useringame = await collection.findOne({players: {user_name: ctxx.message.from.username, user_id: ctxx.message.from.id, perschat: ctxx.chat.id, name: ctxx.message.from.first_name}})
+        let startPlayload = await  Number(ctx.startPayload) 
+        let group = await ctx.tg.getChat(startPlayload);
+        let gminchat = await collection.findOne({chat_id: startPlayload})
+        if(gminchat == null) {
+            await ctx.reply(`В группе "${group.title}" в данный момент не идет игра...`)
+        }else {
+            let useringame = await collection.findOne({players: {user_name: ctx.message.from.username, user_id: ctx.message.from.id, perschat: ctx.chat.id, name: ctx.message.from.first_name}})
             if (useringame == null) {
-                await collection.findOneAndUpdate({chat_id: ctx.chat.id}, {$push: {players: {user_name: ctxx.message.from.username, user_id: ctxx.message.from.id, perschat: ctxx.chat.id, name: ctxx.message.from.first_name}}})
-                let sfin = await collection.findOne({chat_id: ctx.chat.id});
-                let getcmem = await ctxx.tg.getChatMember(sfin.chat_id, ctxx.message.from.id)
-                if(getcmem) {
-                    await ctxx.replyWithHTML(`Вы присоеденились к игре: <b>${ctx.chat.title}</b>`)
+                await collection.findOneAndUpdate({chat_id: startPlayload}, {$push: {players: {user_name: ctx.message.from.username, user_id: ctx.message.from.id, perschat: ctx.chat.id, name: ctx.message.from.first_name}}}) 
+                await ctx.replyWithHTML(`Вы успешно присоеденились к игре: <a href="${group.invite_link}">${group.title}</a>`)
+                let startgmleng = await collection.findOne({chat_id: startPlayload})
+                if(startgmleng.players.length == 1) {
+                    let editedmsg = await ctx.telegram.editMessageCaption(startgmleng.chat_id, startgmleng.tst, ctx.inlineMessageId, `Игроки:\n@${startgmleng.players[0].user_name}`, {
+                        ...Markup.inlineKeyboard([[Markup.button.url('🔁 Присоединиться', `https://t.me/cheatandtake_bot?start=${startPlayload}`)]])})
+                    await collection.findOneAndUpdate({chat_id: startgmleng.chat_id}, {$set: {firschatid: ctx.chat.id}})
+                    await collection.findOneAndUpdate({chat_id: startgmleng.chat_id}, {$set: {tst: editedmsg.message_id}})
                 }else {
-                    return
-                }
-                if(sfin.players.length == 1) {
-                    await ctx.telegram.editMessageCaption(ctx.chat.id, sfin.tst, ctx.callbackQuery.inline_message_id, `Игроки:\n@${sfin.players[0].user_name}`, {
-                        ...Markup.inlineKeyboard([[Markup.button.url('🔁 Присоединиться', 'https://t.me/cheatandtake_bot?start=G')]])})
-                    await collection.findOneAndUpdate({chat_id: ctx.chat.id}, {$set: {firschatid: ctxx.chat.id}})
-                }else {
-                    ctx.scene.enter("game")
-                    await collection.findOneAndUpdate({chat_id: ctx.chat.id}, {$set: {secondchatid: ctxx.chat.id}})
-                }    
+                    await collection.findOneAndUpdate({chat_id: startgmleng.chat_id}, {$set: {secondchatid: ctx.chat.id}})
+                    ctx.scene.enter('game')
+                }                     
             }else {
-                await ctxx.reply('Вы уже участвуете...')
-            }      
-        }) 
+                await ctx.reply('Вы уже участвуете 🟢')
+            }  
+        } 
     }catch(e) {
         console.error(e);
-    }  
-})   
+    }
+})
+
+// bot.action('joinnext', async ctx => {
+//     try {
+//         let findch = await collection.findOne({chat_id: ctx.chat.id});
+//         let editedmsg = await ctx.telegram.editMessageCaption(ctx.chat.id, findch.tst, ctx.callbackQuery.inline_message_id, `...`, {
+//             ...Markup.inlineKeyboard([[Markup.button.url('🔁 Присоединиться', 'https://t.me/cheatandtake_bot?start=G')]])
+//         })
+//         await collection.findOneAndUpdate({chat_id: ctx.chat.id}, {$set: {tst: editedmsg.message_id}})
+//         bot.start(async (ctxx) => {
+//             let useringame = await collection.findOne({players: {user_name: ctxx.message.from.username, user_id: ctxx.message.from.id, perschat: ctxx.chat.id, name: ctxx.message.from.first_name}})
+//             if (useringame == null) {
+//                 await collection.findOneAndUpdate({chat_id: ctx.chat.id}, {$push: {players: {user_name: ctxx.message.from.username, user_id: ctxx.message.from.id, perschat: ctxx.chat.id, name: ctxx.message.from.first_name}}})
+//                 let sfin = await collection.findOne({chat_id: ctx.chat.id});
+//                 let getcmem = await ctxx.tg.getChatMember(sfin.chat_id, ctxx.message.from.id)
+//                 if(getcmem) {
+//                     await ctxx.replyWithHTML(`Вы присоеденились к игре: <b>${ctx.chat.title}</b>`)
+//                 }else {
+//                     return
+//                 }
+//                 if(sfin.players.length == 1) {
+//                     await ctx.telegram.editMessageCaption(ctx.chat.id, sfin.tst, ctx.callbackQuery.inline_message_id, `Игроки:\n@${sfin.players[0].user_name}`, {
+//                         ...Markup.inlineKeyboard([[Markup.button.url('🔁 Присоединиться', 'https://t.me/cheatandtake_bot?start=G')]])})
+//                     await collection.findOneAndUpdate({chat_id: ctx.chat.id}, {$set: {firschatid: ctxx.chat.id}})
+//                 }else {
+//                     ctx.scene.enter("game")
+//                     await collection.findOneAndUpdate({chat_id: ctx.chat.id}, {$set: {secondchatid: ctxx.chat.id}})
+//                 }    
+//             }else {
+//                 await ctxx.reply('Вы уже участвуете...')
+//             }      
+//         }) 
+//     }catch(e) {
+//         console.error(e);
+//     }  
+// })   
 
 
 bot.action("non", async ctx => {
