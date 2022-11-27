@@ -515,7 +515,7 @@ bot.action("non", async ctx => {
                 await collection.findOneAndUpdate({secondchatid: ctx.chat.id}, {$set: {hq: res}});
                 await collection.findOneAndUpdate({secondchatid: ctx.chat.id}, {$set: {scl: 'yes'}});
                 await ctx.answerCbQuery('Принято.', {show_alert: false})
-                await ctx.tg.sendMessage(findchqs.chat_id, `<a href="tg://user?id=${findchqz.players[1].user_id}">${findchqz.players[1].name}</a> решил(а) не менять карты`, {parse_mode: "HTML"})
+                await ctx.tg.sendMessage(findchqs.chat_id, `<a href="tg://user?id=${findchqs.players[1].user_id}">${findchqs.players[1].name}</a> решил(а) не менять карты`, {parse_mode: "HTML"})
                 let totac = await collection.findOne({secondchatid: ctx.chat.id})
                 if(totac.hq == 1) {
                     await ctx.scene.enter("resultsnon")
