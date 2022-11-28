@@ -86,22 +86,25 @@ function getRandomArbitrary(min, max) {
 }
 
 let cards = ['./M.png', './X.png']
+let cardsm = ['./20M.png', './30M.png', './50M.png']
 
 game.enter(async (ctx) => {
     try {
         let findch = await collection.findOne({chat_id: ctx.chat.id});
         await ctx.tg.deleteMessage(findch.chat_id, findch.tst)
 
-        if (findch.totbank == 100) {
-            await ctx.tg.sendPhoto(findch.chat_id, {source: './100K.png'}, {parse_mode: "HTML", caption: `<a href="tg://user?id=${findch.players[0].user_id}">${findch.players[0].name}</a> 👤 VS 👤 <a href="tg://user?id=${findch.players[1].user_id}">${findch.players[1].name}</a>`});
-            await ctx.scene.enter("tofp");            
-        }else if(findch.totbank == 300) {
-            await ctx.tg.sendPhoto(findch.chat_id, {source: './300K.png'}, {parse_mode: "HTML", caption: `<a href="tg://user?id=${findch.players[0].user_id}">${findch.players[0].name}</a> 👤 VS 👤 <a href="tg://user?id=${findch.players[1].user_id}">${findch.players[1].name}</a>`});
-            await ctx.scene.enter("tofp"); 
-        }else {
-            await ctx.tg.sendPhoto(findch.chat_id, {source: './500K.png'}, {parse_mode: "HTML", caption: `<a href="tg://user?id=${findch.players[0].user_id}">${findch.players[0].name}</a> 👤 VS 👤 <a href="tg://user?id=${findch.players[1].user_id}">${findch.players[1].name}</a>`});
-            await ctx.scene.enter("tofp");
-        }
+        setTimeout(async () => {
+            if (findch.totbank == 100) {
+                await ctx.tg.sendPhoto(findch.chat_id, {source: './100K.png'}, {parse_mode: "HTML", caption: `<a href="tg://user?id=${findch.players[0].user_id}">${findch.players[0].name}</a> 👤 VS 👤 <a href="tg://user?id=${findch.players[1].user_id}">${findch.players[1].name}</a>`});
+                await ctx.scene.enter("tofp");            
+            }else if(findch.totbank == 300) {
+                await ctx.tg.sendPhoto(findch.chat_id, {source: './300K.png'}, {parse_mode: "HTML", caption: `<a href="tg://user?id=${findch.players[0].user_id}">${findch.players[0].name}</a> 👤 VS 👤 <a href="tg://user?id=${findch.players[1].user_id}">${findch.players[1].name}</a>`});
+                await ctx.scene.enter("tofp"); 
+            }else {
+                await ctx.tg.sendPhoto(findch.chat_id, {source: './500K.png'}, {parse_mode: "HTML", caption: `<a href="tg://user?id=${findch.players[0].user_id}">${findch.players[0].name}</a> 👤 VS 👤 <a href="tg://user?id=${findch.players[1].user_id}">${findch.players[1].name}</a>`});
+                await ctx.scene.enter("tofp");
+            }            
+        }, 2000);
     }catch(e) {
         console.error(e);
     }
@@ -114,28 +117,33 @@ tofp.enter(async (ctx) => {
         let findch = await collection.findOne({chat_id: ctx.chat.id});
         let random = await getRandomArbitrary(0, 1);
         let whoview = await getRandomArbitrary(0, 1);
+        let randommoneyc = await getRandomArbitrary(0, 2)
         let cardsnum = findch.round + 1;
         await collection.findOneAndUpdate({chat_id: findch.chat_id}, {$set: {round: cardsnum}})
         if(random == 1) {
-            await collection.findOneAndUpdate({chat_id: findch.chat_id}, {$set: {fpr: './M.png'}})
+            await collection.findOneAndUpdate({chat_id: findch.chat_id}, {$set: {fpr: `${cardsm[randommoneyc]}`}})
             await collection.findOneAndUpdate({chat_id: findch.chat_id}, {$set: {spr: './X.png'}})
         }else {  
             await collection.findOneAndUpdate({chat_id: findch.chat_id}, {$set: {fpr: './X.png'}})
-            await collection.findOneAndUpdate({chat_id: findch.chat_id}, {$set: {spr: './M.png'}})
+            await collection.findOneAndUpdate({chat_id: findch.chat_id}, {$set: {spr: `${cardsm[randommoneyc]}`}})
         }  
       
         let findcar = await collection.findOne({chat_id: findch.chat_id});
     
         if(whoview == 0) {
             await ctx.tg.sendPhoto(findcar.players[0].perschat, {source: findcar.fpr}, {caption: `Вам дали посмотреть вашу карту. ${findcar.round} - раунд`});
-            await ctx.tg.sendMessage(findcar.chat_id, `👤 Игроку <a href="tg://user?id=${findcar.players[0].user_id}">${findcar.players[0].name}</a> дали возможность посмотреть на свою карту...`, {parse_mode: "HTML"})
+            setTimeout(async () => {
+                await ctx.tg.sendMessage(findcar.chat_id, `👤 Игроку <a href="tg://user?id=${findcar.players[0].user_id}">${findcar.players[0].name}</a> дали возможность посмотреть на свою карту...`, {parse_mode: "HTML"})
+            }, 2000);
             await ctx.tg.sendPhoto(findcar.players[1].perschat, {source: './q.png'}, {caption: `Вам неизвестно какая у вас карта. ${findcar.round} - раунд`});
             await collection.findOneAndUpdate({chat_id: findch.chat_id}, {$set: {forfirst: false}})
             await collection.findOneAndUpdate({chat_id: findch.chat_id}, {$set: {forsecond: true}})
         }else {
             await ctx.tg.sendPhoto(findcar.players[0].perschat, {source: './q.png'}, {caption: `Вам неизвестно какая у вас карта. ${findcar.round} - раунд`});
             await ctx.tg.sendPhoto(findcar.players[1].perschat, {source: findcar.spr}, {caption: `Вам дали посмотреть вашу карту. ${findcar.round} - раунд`});
-            await ctx.tg.sendMessage(findcar.chat_id, `👤 Игроку <a href="tg://user?id=${findcar.players[1].user_id}">${findcar.players[1].name}</a> дали возможность посмотреть на свою карту...`, {parse_mode: "HTML"})
+            setTimeout(async () => {
+                await ctx.tg.sendMessage(findcar.chat_id, `👤 Игроку <a href="tg://user?id=${findcar.players[1].user_id}">${findcar.players[1].name}</a> дали возможность посмотреть на свою карту...`, {parse_mode: "HTML"})
+            }, 2000);
             await collection.findOneAndUpdate({chat_id: findch.chat_id}, {$set: {forfirst: true}})
             await collection.findOneAndUpdate({chat_id: findch.chat_id}, {$set: {forsecond: false}})
         }
@@ -153,37 +161,44 @@ topfcon.enter(async (ctx) => {
         await collection.findOneAndUpdate({chat_id: findch.chat_id}, {$set: {fcl: 'no'}})
         await collection.findOneAndUpdate({chat_id: findch.chat_id}, {$set: {scl: 'no'}})
         await collection.findOneAndUpdate({chat_id: findch.chat_id}, {$set: {hq: 0}})
-        if (findch.frstsbank ==  0 || findch.secondsbank  ==  0 ) {
+        if (findch.frstsbank <=  0 || findch.secondsbank  <=  0 ) {
             await ctx.scene.enter('leaves')
         }else{
             let random = await getRandomArbitrary(0, 1);
             let whoview = await getRandomArbitrary(0, 1);
+            let randommoneyc = await getRandomArbitrary(0, 2)
             let roundscount = findch.round + 1;
             await collection.findOneAndUpdate({chat_id: findch.chat_id}, {$set: {round: roundscount}})
-            if(random == 1) {
-                await collection.findOneAndUpdate({chat_id: findch.chat_id}, {$set: {fpr: './M.png'}})
-                await collection.findOneAndUpdate({chat_id: findch.chat_id}, {$set: {spr: './X.png'}})
-            }else {  
+
+            if (findch.forfirst == false) {
                 await collection.findOneAndUpdate({chat_id: findch.chat_id}, {$set: {fpr: './X.png'}})
-                await collection.findOneAndUpdate({chat_id: findch.chat_id}, {$set: {spr: './M.png'}})
-            }  
-          
-            let findcar = await collection.findOne({chat_id: findch.chat_id});
-        
-            if(whoview == 0) {
+                await collection.findOneAndUpdate({chat_id: findch.chat_id}, {$set: {spr: `${cardsm[randommoneyc]}`}})
+
+                let findcar = await collection.findOne({chat_id: findch.chat_id});
+
+                await ctx.tg.sendPhoto(findcar.players[0].perschat, {source: './q.png'}, {caption: `Вам неизвестно какая у вас карта. ${findcar.round} - раунд`});
+                await ctx.tg.sendPhoto(findcar.players[1].perschat, {source: findcar.spr}, {caption: `Вам дали посмотреть вашу карту. ${findcar.round} - раунд`});
+                await setTimeout(async () => {
+                    await ctx.tg.sendMessage(findcar.chat_id, `👤 Игроку <a href="tg://user?id=${findcar.players[1].user_id}">${findcar.players[1].name}</a> дали возможность посмотреть на свою карту...`, {parse_mode: "HTML"})
+                }, 2000);
+                await collection.findOneAndUpdate({chat_id: findch.chat_id}, {$set: {forfirst: true}})
+                await collection.findOneAndUpdate({chat_id: findch.chat_id}, {$set: {forsecond: false}})                
+            }else {
+                await collection.findOneAndUpdate({chat_id: findch.chat_id}, {$set: {fpr: `${cardsm[randommoneyc]}`}})
+                await collection.findOneAndUpdate({chat_id: findch.chat_id}, {$set: {spr: './X.png'}})
+
+                let findcar = await collection.findOne({chat_id: findch.chat_id});
+
                 await ctx.tg.sendPhoto(findcar.players[0].perschat, {source: findcar.fpr}, {caption: `Вам дали посмотреть вашу карту. ${findcar.round} - раунд`});
-                await ctx.tg.sendMessage(findcar.chat_id, `👤 Игроку <a href="tg://user?id=${findcar.players[0].user_id}">${findcar.players[0].name}</a> дали возможность посмотреть на свою карту...`, {parse_mode: "HTML"})
+                await setTimeout(async () => {
+                    await ctx.tg.sendMessage(findcar.chat_id, `👤 Игроку <a href="tg://user?id=${findcar.players[0].user_id}">${findcar.players[0].name}</a> дали возможность посмотреть на свою карту...`, {parse_mode: "HTML"})
+                }, 2000);
                 await ctx.tg.sendPhoto(findcar.players[1].perschat, {source: './q.png'}, {caption: `Вам неизвестно какая у вас карта. ${findcar.round} - раунд`});
                 await collection.findOneAndUpdate({chat_id: findch.chat_id}, {$set: {forfirst: false}})
                 await collection.findOneAndUpdate({chat_id: findch.chat_id}, {$set: {forsecond: true}})
-            }else {
-                await ctx.tg.sendPhoto(findcar.players[0].perschat, {source: './q.png'}, {caption: `Вам неизвестно какая у вас карта. ${findcar.round} - раунд`});
-                await ctx.tg.sendPhoto(findcar.players[1].perschat, {source: findcar.spr}, {caption: `Вам дали посмотреть вашу карту. ${findcar.round} - раунд`});
-                await ctx.tg.sendMessage(findcar.chat_id, `👤 Игроку <a href="tg://user?id=${findcar.players[1].user_id}">${findcar.players[1].name}</a> дали возможность посмотреть на свою карту...`, {parse_mode: "HTML"})
-                await collection.findOneAndUpdate({chat_id: findch.chat_id}, {$set: {forfirst: true}})
-                await collection.findOneAndUpdate({chat_id: findch.chat_id}, {$set: {forsecond: false}})
             }
-            await ctx.scene.enter("speakkon")            
+
+            await ctx.scene.enter("speakkon")        
         }
     }catch(e) {
         console.error(e);
@@ -197,8 +212,35 @@ const speak = new Scenes.BaseScene("speak");
 
 speak.enter(async (ctx) => {
     try {
-        let fromgame = await collection.findOne({chat_id: ctx.chat.id})
-        await ctx.tg.sendMessage(fromgame.chat_id, `💭 Игра началась. Раунд - ${fromgame.round}.\nВы можете переговориться о будущем обмене карт или оставить всё как прежде. Удачи!\n\nЕсли вы уже готовы принять решение то введите команду /skip`)
+        let fromgame = await collection.findOne({chat_id: ctx.chat.id});
+
+        if (fromgame.fpr == './20M.png') {
+            setTimeout(async () => {
+                await ctx.tg.sendMessage(fromgame.chat_id, `💭 Игра началась. Раунд - ${fromgame.round}, Игра за <b>20K</b>\nВы можете переговориться о будущем обмене карт или оставить всё как прежде. Удачи!\n\nЕсли вы уже готовы принять решение то введите команду /skip`, {parse_mode: "HTML"})
+            }, 2000);
+        }else if(fromgame.fpr == './30M.png') {
+            setTimeout(async () => {
+                await ctx.tg.sendMessage(fromgame.chat_id, `💭 Игра началась. Раунд - ${fromgame.round}, Игра за <b>30K</b>\nВы можете переговориться о будущем обмене карт или оставить всё как прежде. Удачи!\n\nЕсли вы уже готовы принять решение то введите команду /skip`, {parse_mode: "HTML"})
+            }, 2000);
+        }else if(fromgame.fpr == './50M.png') {
+            setTimeout(async () => {
+                await ctx.tg.sendMessage(fromgame.chat_id, `💭 Игра началась. Раунд - ${fromgame.round}, Игра за <b>50K</b>\nВы можете переговориться о будущем обмене карт или оставить всё как прежде. Удачи!\n\nЕсли вы уже готовы принять решение то введите команду /skip`, {parse_mode: "HTML"})
+            }, 2000);
+        }else if(fromgame.spr == './20M.png') {
+            setTimeout(async () => {
+                await ctx.tg.sendMessage(fromgame.chat_id, `💭 Игра началась. Раунд - ${fromgame.round}, Игра за <b>20K</b>\nВы можете переговориться о будущем обмене карт или оставить всё как прежде. Удачи!\n\nЕсли вы уже готовы принять решение то введите команду /skip`, {parse_mode: "HTML"})
+            }, 2000);
+        }else if(fromgame.spr == './30M.png') {
+            setTimeout(async () => {
+                await ctx.tg.sendMessage(fromgame.chat_id, `💭 Игра началась. Раунд - ${fromgame.round}, Игра за <b>30K</b>\nВы можете переговориться о будущем обмене карт или оставить всё как прежде. Удачи!\n\nЕсли вы уже готовы принять решение то введите команду /skip`, {parse_mode: "HTML"})
+            }, 2000);
+        }else if(fromgame.spr == './50M.png') {
+            setTimeout(async () => {
+                await ctx.tg.sendMessage(fromgame.chat_id, `💭 Игра началась. Раунд - ${fromgame.round}, Игра за <b>50K</b>\nВы можете переговориться о будущем обмене карт или оставить всё как прежде. Удачи!\n\nЕсли вы уже готовы принять решение то введите команду /skip`, {parse_mode: "HTML"})
+            }, 2000);
+        }else {
+            console.log('ЕРОР В SPEAK');
+        }
     }catch(e) {
         console.error(e);
     }
@@ -211,7 +253,34 @@ const speakkon = new Scenes.BaseScene("speakkon");
 speakkon.enter(async (ctx) => {
     try {
         let fromgame = await collection.findOne({players: {user_name: ctx.callbackQuery.from.username, user_id: ctx.callbackQuery.from.id, perschat: ctx.chat.id, name: ctx.callbackQuery.from.first_name}})
-        await ctx.tg.sendMessage(fromgame.chat_id, `💭 Игра продолжается. Раунд - ${fromgame.round}\nЕсли вы уже готовы принять решение то введите команду /skip`)
+
+        if (fromgame.fpr == './20M.png') {
+            setTimeout(async () => {
+                await ctx.tg.sendMessage(fromgame.chat_id, `💭 Игра продолжается. Раунд - ${fromgame.round}, Игра за <b>20K</b>\nЕсли вы уже готовы принять решение то введите команду /skip`, {parse_mode: "HTML"})
+            }, 2000);
+        }else if(fromgame.fpr == './30M.png') {
+            setTimeout(async () => {
+                await ctx.tg.sendMessage(fromgame.chat_id, `💭 Игра продолжается. Раунд - ${fromgame.round}, Игра за <b>30K</b>\nЕсли вы уже готовы принять решение то введите команду /skip`, {parse_mode: "HTML"})
+            }, 2000);
+        }else if(fromgame.fpr == './50M.png') {
+            setTimeout(async () => {
+                await ctx.tg.sendMessage(fromgame.chat_id, `💭 Игра продолжается. Раунд - ${fromgame.round}, Игра за <b>50K</b>\nЕсли вы уже готовы принять решение то введите команду /skip`, {parse_mode: "HTML"})
+            }, 2000);
+        }else if(fromgame.spr == './20M.png') {
+            setTimeout(async () => {
+                await ctx.tg.sendMessage(fromgame.chat_id, `💭 Игра продолжается. Раунд - ${fromgame.round}, Игра за <b>20K</b>\nЕсли вы уже готовы принять решение то введите команду /skip`, {parse_mode: "HTML"})
+            }, 2000);
+        }else if(fromgame.spr == './30M.png') {
+            setTimeout(async () => {
+                await ctx.tg.sendMessage(fromgame.chat_id, `💭 Игра продолжается. Раунд - ${fromgame.round}, Игра за <b>30K</b>\nЕсли вы уже готовы принять решение то введите команду /skip`, {parse_mode: "HTML"})
+            }, 2000);
+        }else if(fromgame.spr == './50M.png') {
+            setTimeout(async () => {
+                await ctx.tg.sendMessage(fromgame.chat_id, `💭 Игра продолжается. Раунд - ${fromgame.round}, Игра за <b>50K</b>\nЕсли вы уже готовы принять решение то введите команду /skip`, {parse_mode: "HTML"})
+            }, 2000);
+        }else {
+            console.log('ЕРОР В SPEAKKON');
+        }
     }catch(e) {
         console.error(e);
     }
@@ -224,29 +293,31 @@ const quiz = new Scenes.BaseScene("quiz");
 quiz.enter(async (ctx) => {
     try {
         let findch = await collection.findOne({chat_id: ctx.chat.id});
-        if(findch.forfirst == true) {
-            let tofu = await ctx.telegram.sendMessage(findch.players[0].perschat, 'Хочешь поменять карты?', {
-                ...Markup.inlineKeyboard(  
-                    [
-                        [Markup.button.callback('Да, меняй', 'ye'), Markup.button.callback('Нет, оставим', 'non')]
-                    ]
-                ).resize().oneTime()
-            });
-            await collection.findOneAndUpdate({chat_id: ctx.chat.id}, {$set: {tofmi: tofu.message_id}});
-            await ctx.replyWithHTML(`<a href="tg://user?id=${findch.players[0].user_id}">${findch.players[0].name}</a>, пришло время действовать...\n\nПерейдите в лс <a href="https://t.me/cheatandtake_bot">боту</a> и примите решение...\nВсе зависит только от вас!`, {disable_web_page_preview: true});
-        }else if(findch.forsecond == true) {
-            let tosu = await ctx.telegram.sendMessage(findch.players[1].perschat, 'Хочешь поменять карты?', {
-                ...Markup.inlineKeyboard(
-                    [
-                        [Markup.button.callback('Да, меняй', 'ye'), Markup.button.callback('Нет, оставим', 'non')]
-                    ]
-                ).resize().oneTime()
-            });
-            await collection.findOneAndUpdate({chat_id: ctx.chat.id}, {$set: {sofmi: tosu.message_id}});
-            await ctx.replyWithHTML(`<a href="tg://user?id=${findch.players[1].user_id}">${findch.players[1].name}</a>, пришло время действовать...\n\nПерейдите в лс <a href="https://t.me/cheatandtake_bot">боту</a> и примите решение...\nВсе зависит только от вас!`, {disable_web_page_preview: true});
-        }else {
-            return
-        }
+        await setTimeout(async () => {
+            if(findch.forfirst == true) {
+                let tofu = await ctx.telegram.sendMessage(findch.players[0].perschat, 'Хочешь поменять карты?', {
+                    ...Markup.inlineKeyboard(  
+                        [
+                            [Markup.button.callback('Да, меняй', 'ye'), Markup.button.callback('Нет, оставим', 'non')]
+                        ]
+                    ).resize().oneTime()
+                });
+                await collection.findOneAndUpdate({chat_id: ctx.chat.id}, {$set: {tofmi: tofu.message_id}});
+                await ctx.replyWithHTML(`<a href="tg://user?id=${findch.players[0].user_id}">${findch.players[0].name}</a>, пришло время действовать...\n\nПерейдите в лс <a href="https://t.me/cheatandtake_bot">боту</a> и примите решение...\nВсе зависит только от вас!`, {disable_web_page_preview: true});
+            }else if(findch.forsecond == true) {
+                let tosu = await ctx.telegram.sendMessage(findch.players[1].perschat, 'Хочешь поменять карты?', {
+                    ...Markup.inlineKeyboard(
+                        [
+                            [Markup.button.callback('Да, меняй', 'ye'), Markup.button.callback('Нет, оставим', 'non')]
+                        ]
+                    ).resize().oneTime()
+                });
+                await collection.findOneAndUpdate({chat_id: ctx.chat.id}, {$set: {sofmi: tosu.message_id}});
+                await ctx.replyWithHTML(`<a href="tg://user?id=${findch.players[1].user_id}">${findch.players[1].name}</a>, пришло время действовать...\n\nПерейдите в лс <a href="https://t.me/cheatandtake_bot">боту</a> и примите решение...\nВсе зависит только от вас!`, {disable_web_page_preview: true});
+            }else {
+                return
+            }
+        }, 1000)
     }catch(e) {
         console.error(e);
     } 
@@ -264,58 +335,66 @@ results.enter(async ctx => {
             await ctx.tg.sendMessage(cht.chat_id, 'Пришло время показать карты обеих участников...');
             let card = await collection.findOne({firschatid: cht.firschatid})
             setTimeout(async () => {
-                await ctx.tg.sendPhoto(card.chat_id, {source: card.spr}, {parse_mode: "HTML", caption: `🃏 Карта первого участника - <a href="tg://user?id=${card.players[0].user_id}">${card.players[0].name}</a>`})
-                await ctx.tg.sendPhoto(card.chat_id, {source: card.fpr}, {parse_mode: "HTML", caption: `🃏 Карта первого участника - <a href="tg://user?id=${card.players[1].user_id}">${card.players[1].name}</a>`})
+                await ctx.tg.sendPhoto(card.chat_id, {source: card.spr}, {parse_mode: "HTML", caption: `🃏 Карта первого участника - <a href="tg://user?id=${card.players[0].user_id}">${card.players[0].name}</a>`})                    
+                await ctx.tg.sendPhoto(card.chat_id, {source: card.fpr}, {parse_mode: "HTML", caption: `🃏 Карта второго участника - <a href="tg://user?id=${card.players[1].user_id}">${card.players[1].name}</a>`})                                  
                 await collection.findOneAndUpdate({firschatid: ctx.chat.id}, {$set: {fpr: card.spr}})
                 await collection.findOneAndUpdate({firschatid: ctx.chat.id}, {$set: {spr: card.fpr}})
                 let card_sectime = await collection.findOne({firschatid: ctx.chat.id})
-                if(card_sectime.fpr == './M.png') {
-                    await ctx.tg.sendMessage(card.chat_id, `🥇 Победитель:\n<a href="tg://user?id=${card.players[0].user_id}">${card.players[0].name}</a>`, {parse_mode: "HTML"})
-                    if (card_sectime.totbank == 100) {
+                if(card_sectime.fpr == './20M.png' || card_sectime.fpr == './30M.png' || card_sectime.fpr == './50M.png') {
+                    await ctx.tg.sendMessage(card.chat_id, `💸 Победитель раунда:\n<a href="tg://user?id=${card.players[0].user_id}">${card.players[0].name}</a>`, {parse_mode: "HTML"})
+                    
+                    if (card_sectime.fpr == './20M.png') {
                         let minmony = card_sectime.secondsbank - 20;
                         await collection.findOneAndUpdate({chat_id: card_sectime.chat_id}, {$set: {secondsbank: minmony}})
                         let osbank = await collection.findOne({chat_id: card_sectime.chat_id})
-                        await ctx.tg.sendMessage(osbank.chat_id, `Банк участника - <a href="tg://user?id=${osbank.players[1].user_id}">${osbank.players[1].name}</a>:\n${osbank.secondsbank}К\n\nБанк участника - <a href="tg://user?id=${osbank.players[0].user_id}">${osbank.players[0].name}</a>:\n${osbank.frstsbank}К`, {parse_mode: "HTML"})
-
-                        await ctx.scene.enter('topfcon')
-                    }else if (card_sectime.totbank == 300) {
-                        let minmony = card_sectime.secondsbank - 60;
+                        await setTimeout(async () => {
+                            await ctx.tg.sendMessage(osbank.chat_id, `Банк участника - <a href="tg://user?id=${osbank.players[1].user_id}">${osbank.players[1].name}</a>:\n${osbank.secondsbank}К\n\nБанк участника - <a href="tg://user?id=${osbank.players[0].user_id}">${osbank.players[0].name}</a>:\n${osbank.frstsbank}К`, {parse_mode: "HTML"})
+                            await ctx.scene.enter('topfcon')
+                        }, 2000)
+                    } else if(card_sectime.fpr == './30M.png') {
+                        let minmony = card_sectime.secondsbank - 30;
                         await collection.findOneAndUpdate({chat_id: card_sectime.chat_id}, {$set: {secondsbank: minmony}})
                         let osbank = await collection.findOne({chat_id: card_sectime.chat_id})
-                        await ctx.tg.sendMessage(osbank.chat_id, `Банк участника - <a href="tg://user?id=${osbank.players[1].user_id}">${osbank.players[1].name}</a>:\n${osbank.secondsbank}К\n\nБанк участника - <a href="tg://user?id=${osbank.players[0].user_id}">${osbank.players[0].name}</a>:\n${osbank.frstsbank}К`, {parse_mode: "HTML"})
-
-                        await ctx.scene.enter('topfcon')
+                        await setTimeout(async () => {
+                            await ctx.tg.sendMessage(osbank.chat_id, `Банк участника - <a href="tg://user?id=${osbank.players[1].user_id}">${osbank.players[1].name}</a>:\n${osbank.secondsbank}К\n\nБанк участника - <a href="tg://user?id=${osbank.players[0].user_id}">${osbank.players[0].name}</a>:\n${osbank.frstsbank}К`, {parse_mode: "HTML"})
+                            await ctx.scene.enter('topfcon')
+                        }, 2000)
                     }else {
-                        let minmony = card_sectime.secondsbank - 100;
+                        let minmony = card_sectime.secondsbank - 50;
                         await collection.findOneAndUpdate({chat_id: card_sectime.chat_id}, {$set: {secondsbank: minmony}})
                         let osbank = await collection.findOne({chat_id: card_sectime.chat_id})
-                        await ctx.tg.sendMessage(osbank.chat_id, `Банк участника - <a href="tg://user?id=${osbank.players[1].user_id}">${osbank.players[1].name}</a>:\n${osbank.secondsbank}К\n\nБанк участника - <a href="tg://user?id=${osbank.players[0].user_id}">${osbank.players[0].name}</a>:\n${osbank.frstsbank}К`, {parse_mode: "HTML"})
-
-                        await ctx.scene.enter('topfcon')
+                        await setTimeout(async () => {
+                            await ctx.tg.sendMessage(osbank.chat_id, `Банк участника - <a href="tg://user?id=${osbank.players[1].user_id}">${osbank.players[1].name}</a>:\n${osbank.secondsbank}К\n\nБанк участника - <a href="tg://user?id=${osbank.players[0].user_id}">${osbank.players[0].name}</a>:\n${osbank.frstsbank}К`, {parse_mode: "HTML"})
+                            await ctx.scene.enter('topfcon')
+                        }, 2000)
                     }
                 }else {
-                    await ctx.tg.sendMessage(card.chat_id, `🥇 Победитель:\n<a href="tg://user?id=${card.players[1].user_id}">${card.players[1].name}</a>`, {parse_mode: "HTML"})
-                    if (card_sectime.totbank == 100) {
+                    await ctx.tg.sendMessage(card.chat_id, `💸 Победитель раунда:\n<a href="tg://user?id=${card.players[1].user_id}">${card.players[1].name}</a>`, {parse_mode: "HTML"})
+
+                    if (card_sectime.spr == './20M.png') {
                         let minmony = card_sectime.frstsbank - 20;
                         await collection.findOneAndUpdate({chat_id: card_sectime.chat_id}, {$set: {frstsbank: minmony}})
                         let osbank = await collection.findOne({chat_id: card_sectime.chat_id})
-                        await ctx.tg.sendMessage(osbank.chat_id, `Банк участника - <a href="tg://user?id=${osbank.players[0].user_id}">${osbank.players[0].name}</a>:\n${osbank.frstsbank}К\n\nБанк участника - <a href="tg://user?id=${osbank.players[1].user_id}">${osbank.players[1].name}</a>:\n${osbank.secondsbank}К`, {parse_mode: "HTML"})
-
-                        await ctx.scene.enter('topfcon')
-                    }else if (card_sectime.totbank == 300) {
-                        let minmony = card_sectime.frstsbank - 60;
+                        await setTimeout(async () => {
+                            await ctx.tg.sendMessage(osbank.chat_id, `Банк участника - <a href="tg://user?id=${osbank.players[0].user_id}">${osbank.players[0].name}</a>:\n${osbank.frstsbank}К\n\nБанк участника - <a href="tg://user?id=${osbank.players[1].user_id}">${osbank.players[1].name}</a>:\n${osbank.secondsbank}К`, {parse_mode: "HTML"})
+                            await ctx.scene.enter('topfcon')
+                        }, 2000)
+                    } else if(card_sectime.spr == './30M.png') {
+                        let minmony = card_sectime.frstsbank - 30;
                         await collection.findOneAndUpdate({chat_id: card_sectime.chat_id}, {$set: {frstsbank: minmony}})
                         let osbank = await collection.findOne({chat_id: card_sectime.chat_id})
-                        await ctx.tg.sendMessage(osbank.chat_id, `Банк участника - <a href="tg://user?id=${osbank.players[0].user_id}">${osbank.players[0].name}</a>:\n${osbank.frstsbank}К\n\nБанк участника - <a href="tg://user?id=${osbank.players[1].user_id}">${osbank.players[1].name}</a>:\n${osbank.secondsbank}К`, {parse_mode: "HTML"})
-
-                        await ctx.scene.enter('topfcon')
+                        await setTimeout(async () => {
+                            await ctx.tg.sendMessage(osbank.chat_id, `Банк участника - <a href="tg://user?id=${osbank.players[0].user_id}">${osbank.players[0].name}</a>:\n${osbank.frstsbank}К\n\nБанк участника - <a href="tg://user?id=${osbank.players[1].user_id}">${osbank.players[1].name}</a>:\n${osbank.secondsbank}К`, {parse_mode: "HTML"}) 
+                            await ctx.scene.enter('topfcon')                            
+                        }, 2000)
                     }else {
-                        let minmony = card_sectime.frstsbank - 100;
+                        let minmony = card_sectime.frstsbank - 50;
                         await collection.findOneAndUpdate({chat_id: card_sectime.chat_id}, {$set: {frstsbank: minmony}})
                         let osbank = await collection.findOne({chat_id: card_sectime.chat_id})
-                        await ctx.tg.sendMessage(osbank.chat_id, `Банк участника - <a href="tg://user?id=${osbank.players[0].user_id}">${osbank.players[0].name}</a>:\n${osbank.frstsbank}К\n\nБанк участника - <a href="tg://user?id=${osbank.players[1].user_id}">${osbank.players[1].name}</a>:\n${osbank.secondsbank}К`, {parse_mode: "HTML"})
-
-                        await ctx.scene.enter('topfcon')
+                        await setTimeout(async () => {
+                            await ctx.tg.sendMessage(osbank.chat_id, `Банк участника - <a href="tg://user?id=${osbank.players[0].user_id}">${osbank.players[0].name}</a>:\n${osbank.frstsbank}К\n\nБанк участника - <a href="tg://user?id=${osbank.players[1].user_id}">${osbank.players[1].name}</a>:\n${osbank.secondsbank}К`, {parse_mode: "HTML"})
+                            await ctx.scene.enter('topfcon')
+                        }, 2000)
                     }
                 }
             }, 3000)
@@ -323,58 +402,66 @@ results.enter(async ctx => {
             await ctx.tg.sendMessage(chts.chat_id, 'Пришло время показать карты обеих участников...');
             let card = await collection.findOne({secondchatid: chts.secondchatid})
             setTimeout(async () => {
-                await ctx.tg.sendPhoto(card.chat_id, {source: card.spr}, {parse_mode: "HTML", caption: `🃏 Карта первого участника - <a href="tg://user?id=${card.players[0].user_id}">${card.players[0].name}</a>`})
-                await ctx.tg.sendPhoto(card.chat_id, {source: card.fpr}, {parse_mode: "HTML", caption: `🃏 Карта первого участника - <a href="tg://user?id=${card.players[1].user_id}">${card.players[1].name}</a>`})
+                await ctx.tg.sendPhoto(card.chat_id, {source: card.spr}, {parse_mode: "HTML", caption: `🃏 Карта первого участника - <a href="tg://user?id=${card.players[0].user_id}">${card.players[0].name}</a>`})                    
+                await ctx.tg.sendPhoto(card.chat_id, {source: card.fpr}, {parse_mode: "HTML", caption: `🃏 Карта второго участника - <a href="tg://user?id=${card.players[1].user_id}">${card.players[1].name}</a>`}) 
                 await collection.findOneAndUpdate({secondchatid: ctx.chat.id}, {$set: {fpr: card.spr}})
                 await collection.findOneAndUpdate({secondchatid: ctx.chat.id}, {$set: {spr: card.fpr}})
                 let card_sectime = await collection.findOne({secondchatid: ctx.chat.id})
-                if(card_sectime.fpr == './M.png') {
-                    await ctx.tg.sendMessage(card.chat_id, `🥇 Победитель:\n<a href="tg://user?id=${card.players[0].user_id}">${card.players[0].name}</a>`, {parse_mode: "HTML"})
-                    if (card_sectime.totbank == 100) {
+                if(card_sectime.fpr == './20M.png' || card_sectime.fpr == './30M.png' || card_sectime.fpr == './50M.png') {
+                    await ctx.tg.sendMessage(card.chat_id, `💸 Победитель раунда:\n<a href="tg://user?id=${card.players[0].user_id}">${card.players[0].name}</a>`, {parse_mode: "HTML"})
+                    
+                    if (card_sectime.fpr == './20M.png') {
                         let minmony = card_sectime.secondsbank - 20;
                         await collection.findOneAndUpdate({chat_id: card_sectime.chat_id}, {$set: {secondsbank: minmony}})
                         let osbank = await collection.findOne({chat_id: card_sectime.chat_id})
-                        await ctx.tg.sendMessage(osbank.chat_id, `Банк участника - <a href="tg://user?id=${osbank.players[1].user_id}">${osbank.players[1].name}</a>:\n${osbank.secondsbank}К\n\nБанк участника - <a href="tg://user?id=${osbank.players[0].user_id}">${osbank.players[0].name}</a>:\n${osbank.frstsbank}К`, {parse_mode: "HTML"})
-
-                        await ctx.scene.enter('topfcon')
-                    }else if (card_sectime.totbank == 300) {
-                        let minmony = card_sectime.secondsbank - 60;
+                        await setTimeout(async () => {
+                            await ctx.tg.sendMessage(osbank.chat_id, `Банк участника - <a href="tg://user?id=${osbank.players[1].user_id}">${osbank.players[1].name}</a>:\n${osbank.secondsbank}К\n\nБанк участника - <a href="tg://user?id=${osbank.players[0].user_id}">${osbank.players[0].name}</a>:\n${osbank.frstsbank}К`, {parse_mode: "HTML"})
+                            await ctx.scene.enter('topfcon')
+                        }, 2000)
+                    } else if(card_sectime.fpr == './30M.png') {
+                        let minmony = card_sectime.secondsbank - 30;
                         await collection.findOneAndUpdate({chat_id: card_sectime.chat_id}, {$set: {secondsbank: minmony}})
                         let osbank = await collection.findOne({chat_id: card_sectime.chat_id})
-                        await ctx.tg.sendMessage(osbank.chat_id, `Банк участника - <a href="tg://user?id=${osbank.players[1].user_id}">${osbank.players[1].name}</a>:\n${osbank.secondsbank}К\n\nБанк участника - <a href="tg://user?id=${osbank.players[0].user_id}">${osbank.players[0].name}</a>:\n${osbank.frstsbank}К`, {parse_mode: "HTML"})
-
-                        await ctx.scene.enter('topfcon')
+                        await setTimeout(async () => {
+                            await ctx.tg.sendMessage(osbank.chat_id, `Банк участника - <a href="tg://user?id=${osbank.players[1].user_id}">${osbank.players[1].name}</a>:\n${osbank.secondsbank}К\n\nБанк участника - <a href="tg://user?id=${osbank.players[0].user_id}">${osbank.players[0].name}</a>:\n${osbank.frstsbank}К`, {parse_mode: "HTML"})
+                            await ctx.scene.enter('topfcon')
+                        }, 2000) 
                     }else {
-                        let minmony = card_sectime.secondsbank - 100;
+                        let minmony = card_sectime.secondsbank - 50;
                         await collection.findOneAndUpdate({chat_id: card_sectime.chat_id}, {$set: {secondsbank: minmony}})
                         let osbank = await collection.findOne({chat_id: card_sectime.chat_id})
-                        await ctx.tg.sendMessage(osbank.chat_id, `Банк участника - <a href="tg://user?id=${osbank.players[1].user_id}">${osbank.players[1].name}</a>:\n${osbank.secondsbank}К\n\nБанк участника - <a href="tg://user?id=${osbank.players[0].user_id}">${osbank.players[0].name}</a>:\n${osbank.frstsbank}К`, {parse_mode: "HTML"})
-
-                        await ctx.scene.enter('topfcon')
+                        await setTimeout(async () => {
+                            await ctx.tg.sendMessage(osbank.chat_id, `Банк участника - <a href="tg://user?id=${osbank.players[1].user_id}">${osbank.players[1].name}</a>:\n${osbank.secondsbank}К\n\nБанк участника - <a href="tg://user?id=${osbank.players[0].user_id}">${osbank.players[0].name}</a>:\n${osbank.frstsbank}К`, {parse_mode: "HTML"})
+                            await ctx.scene.enter('topfcon')
+                        }, 2000)
                     }
                 }else {
-                    await ctx.tg.sendMessage(card.chat_id, `🥇 Победитель:\n<a href="tg://user?id=${card.players[1].user_id}">${card.players[1].name}</a>`, {parse_mode: "HTML"})
-                    if (card_sectime.totbank == 100) {
+                    await ctx.tg.sendMessage(card.chat_id, `💸 Победитель раунда:\n<a href="tg://user?id=${card.players[1].user_id}">${card.players[1].name}</a>`, {parse_mode: "HTML"})
+
+                    if (card_sectime.spr == './20M.png') {
                         let minmony = card_sectime.frstsbank - 20;
                         await collection.findOneAndUpdate({chat_id: card_sectime.chat_id}, {$set: {frstsbank: minmony}})
                         let osbank = await collection.findOne({chat_id: card_sectime.chat_id})
-                        await ctx.tg.sendMessage(osbank.chat_id, `Банк участника - <a href="tg://user?id=${osbank.players[0].user_id}">${osbank.players[0].name}</a>:\n${osbank.frstsbank}К\n\nБанк участника - <a href="tg://user?id=${osbank.players[1].user_id}">${osbank.players[1].name}</a>:\n${osbank.secondsbank}К`, {parse_mode: "HTML"})
-
-                        await ctx.scene.enter('topfcon')
-                    }else if (card_sectime.totbank == 300) {
-                        let minmony = card_sectime.frstsbank - 60;
+                        await setTimeout(async () => {
+                            await ctx.tg.sendMessage(osbank.chat_id, `Банк участника - <a href="tg://user?id=${osbank.players[0].user_id}">${osbank.players[0].name}</a>:\n${osbank.frstsbank}К\n\nБанк участника - <a href="tg://user?id=${osbank.players[1].user_id}">${osbank.players[1].name}</a>:\n${osbank.secondsbank}К`, {parse_mode: "HTML"})
+                            await ctx.scene.enter('topfcon')
+                        }, 2000)
+                    } else if(card_sectime.spr == './30M.png') {
+                        let minmony = card_sectime.frstsbank - 30;
                         await collection.findOneAndUpdate({chat_id: card_sectime.chat_id}, {$set: {frstsbank: minmony}})
                         let osbank = await collection.findOne({chat_id: card_sectime.chat_id})
-                        await ctx.tg.sendMessage(osbank.chat_id, `Банк участника - <a href="tg://user?id=${osbank.players[0].user_id}">${osbank.players[0].name}</a>:\n${osbank.frstsbank}К\n\nБанк участника - <a href="tg://user?id=${osbank.players[1].user_id}">${osbank.players[1].name}</a>:\n${osbank.secondsbank}К`, {parse_mode: "HTML"})
-
-                        await ctx.scene.enter('topfcon')
+                        await setTimeout(async () => {
+                            await ctx.tg.sendMessage(osbank.chat_id, `Банк участника - <a href="tg://user?id=${osbank.players[0].user_id}">${osbank.players[0].name}</a>:\n${osbank.frstsbank}К\n\nБанк участника - <a href="tg://user?id=${osbank.players[1].user_id}">${osbank.players[1].name}</a>:\n${osbank.secondsbank}К`, {parse_mode: "HTML"})
+                            await ctx.scene.enter('topfcon')
+                        }, 2000)
                     }else {
-                        let minmony = card_sectime.frstsbank - 100;
+                        let minmony = card_sectime.frstsbank - 50;
                         await collection.findOneAndUpdate({chat_id: card_sectime.chat_id}, {$set: {frstsbank: minmony}})
                         let osbank = await collection.findOne({chat_id: card_sectime.chat_id})
-                        await ctx.tg.sendMessage(osbank.chat_id, `Банк участника - <a href="tg://user?id=${osbank.players[0].user_id}">${osbank.players[0].name}</a>:\n${osbank.frstsbank}К\n\nБанк участника - <a href="tg://user?id=${osbank.players[1].user_id}">${osbank.players[1].name}</a>:\n${osbank.secondsbank}К`, {parse_mode: "HTML"})
-
-                        await ctx.scene.enter('topfcon')
+                        await setTimeout(async () => {
+                            await ctx.tg.sendMessage(osbank.chat_id, `Банк участника - <a href="tg://user?id=${osbank.players[0].user_id}">${osbank.players[0].name}</a>:\n${osbank.frstsbank}К\n\nБанк участника - <a href="tg://user?id=${osbank.players[1].user_id}">${osbank.players[1].name}</a>:\n${osbank.secondsbank}К`, {parse_mode: "HTML"})         
+                            await ctx.scene.enter('topfcon')                   
+                        }, 2000)
                     }
                 }
             }, 3000)
@@ -396,113 +483,129 @@ resultsnon.enter(async ctx => {
                 await ctx.tg.sendMessage(cht.chat_id, 'Пришло время показать карты обеих участников...');
                 let card = await collection.findOne({firschatid: cht.firschatid})
                 let card_sectime = await collection.findOne({chat_id: card.chat_id})
-                setTimeout(async () => {
-                    await ctx.tg.sendPhoto(card.chat_id, {source: card.fpr}, {parse_mode: "HTML", caption: `🃏 Карта первого участника - <a href="tg://user?id=${card.players[0].user_id}">${card.players[0].name}</a>`})
-                    await ctx.tg.sendPhoto(card.chat_id, {source: card.spr}, {parse_mode: "HTML", caption: `🃏 Карта первого участника - <a href="tg://user?id=${card.players[1].user_id}">${card.players[1].name}</a>`})
-                    if(card.fpr == './M.png') {
-                        await ctx.tg.sendMessage(card.chat_id, `🥇 Победитель:\n<a href="tg://user?id=${card.players[0].user_id}">${card.players[0].name}</a>`, {parse_mode: "HTML"})
-                        if (card_sectime.totbank == 100) {
+                await setTimeout(async () => {
+                    await ctx.tg.sendPhoto(card.chat_id, {source: card.fpr}, {parse_mode: "HTML", caption: `🃏 Карта первого участника - <a href="tg://user?id=${card.players[0].user_id}">${card.players[0].name}</a>`})                       
+                    await ctx.tg.sendPhoto(card.chat_id, {source: card.spr}, {parse_mode: "HTML", caption: `🃏 Карта второго участника - <a href="tg://user?id=${card.players[1].user_id}">${card.players[1].name}</a>`})                                                
+                    if(card_sectime.fpr == './20M.png' || card_sectime.fpr == './30M.png' || card_sectime.fpr == './50M.png') {
+                        await ctx.tg.sendMessage(card.chat_id, `💸 Победитель раунда:\n<a href="tg://user?id=${card.players[0].user_id}">${card.players[0].name}</a>`, {parse_mode: "HTML"})
+                        
+                        if (card_sectime.fpr == './20M.png') {
                             let minmony = card_sectime.secondsbank - 20;
                             await collection.findOneAndUpdate({chat_id: card_sectime.chat_id}, {$set: {secondsbank: minmony}})
                             let osbank = await collection.findOne({chat_id: card_sectime.chat_id})
-                            await ctx.tg.sendMessage(osbank.chat_id, `Банк участника - <a href="tg://user?id=${osbank.players[1].user_id}">${osbank.players[1].name}</a>:\n${osbank.secondsbank}К\n\nБанк участника - <a href="tg://user?id=${osbank.players[0].user_id}">${osbank.players[0].name}</a>:\n${osbank.frstsbank}К`, {parse_mode: "HTML"})
-    
-                            await ctx.scene.enter('topfcon')
-                        }else if (card_sectime.totbank == 300) {
-                            let minmony = card_sectime.secondsbank - 60;
+                            setTimeout(async () => {
+                                await ctx.tg.sendMessage(osbank.chat_id, `Банк участника - <a href="tg://user?id=${osbank.players[1].user_id}">${osbank.players[1].name}</a>:\n${osbank.secondsbank}К\n\nБанк участника - <a href="tg://user?id=${osbank.players[0].user_id}">${osbank.players[0].name}</a>:\n${osbank.frstsbank}К`, {parse_mode: "HTML"})
+                                await ctx.scene.enter('topfcon')
+                            }, 2000)
+                        } else if(card_sectime.fpr == './30M.png') {
+                            let minmony = card_sectime.secondsbank - 30;
                             await collection.findOneAndUpdate({chat_id: card_sectime.chat_id}, {$set: {secondsbank: minmony}})
                             let osbank = await collection.findOne({chat_id: card_sectime.chat_id})
-                            await ctx.tg.sendMessage(osbank.chat_id, `Банк участника - <a href="tg://user?id=${osbank.players[1].user_id}">${osbank.players[1].name}</a>:\n${osbank.secondsbank}К\n\nБанк участника - <a href="tg://user?id=${osbank.players[0].user_id}">${osbank.players[0].name}</a>:\n${osbank.frstsbank}К`, {parse_mode: "HTML"})
-    
-                            await ctx.scene.enter('topfcon')
+                            setTimeout(async () => {
+                                await ctx.tg.sendMessage(osbank.chat_id, `Банк участника - <a href="tg://user?id=${osbank.players[1].user_id}">${osbank.players[1].name}</a>:\n${osbank.secondsbank}К\n\nБанк участника - <a href="tg://user?id=${osbank.players[0].user_id}">${osbank.players[0].name}</a>:\n${osbank.frstsbank}К`, {parse_mode: "HTML"})
+                                await ctx.scene.enter('topfcon')
+                            }, 2000)
                         }else {
-                            let minmony = card_sectime.secondsbank - 100;
+                            let minmony = card_sectime.secondsbank - 50;
                             await collection.findOneAndUpdate({chat_id: card_sectime.chat_id}, {$set: {secondsbank: minmony}})
                             let osbank = await collection.findOne({chat_id: card_sectime.chat_id})
-                            await ctx.tg.sendMessage(osbank.chat_id, `Банк участника - <a href="tg://user?id=${osbank.players[1].user_id}">${osbank.players[1].name}</a>:\n${osbank.secondsbank}К\n\nБанк участника - <a href="tg://user?id=${osbank.players[0].user_id}">${osbank.players[0].name}</a>:\n${osbank.frstsbank}К`, {parse_mode: "HTML"})
-    
-                            await ctx.scene.enter('topfcon')
-                        }                        
+                            setTimeout(async () => {
+                                await ctx.tg.sendMessage(osbank.chat_id, `Банк участника - <a href="tg://user?id=${osbank.players[1].user_id}">${osbank.players[1].name}</a>:\n${osbank.secondsbank}К\n\nБанк участника - <a href="tg://user?id=${osbank.players[0].user_id}">${osbank.players[0].name}</a>:\n${osbank.frstsbank}К`, {parse_mode: "HTML"})
+                                await ctx.scene.enter('topfcon')
+                            }, 2000)
+                        }
                     }else {
-                        await ctx.tg.sendMessage(card.chat_id, `🥇 Победитель:\n<a href="tg://user?id=${card.players[1].user_id}">${card.players[1].name}</a>`, {parse_mode: "HTML"})
-                        if (card_sectime.totbank == 100) {
+                        await ctx.tg.sendMessage(card.chat_id, `💸 Победитель раунда:\n<a href="tg://user?id=${card.players[1].user_id}">${card.players[1].name}</a>`, {parse_mode: "HTML"})
+    
+                        if (card_sectime.spr == './20M.png') {
                             let minmony = card_sectime.frstsbank - 20;
                             await collection.findOneAndUpdate({chat_id: card_sectime.chat_id}, {$set: {frstsbank: minmony}})
                             let osbank = await collection.findOne({chat_id: card_sectime.chat_id})
-                            await ctx.tg.sendMessage(osbank.chat_id, `Банк участника - <a href="tg://user?id=${osbank.players[0].user_id}">${osbank.players[0].name}</a>:\n${osbank.frstsbank}К\n\nБанк участника - <a href="tg://user?id=${osbank.players[1].user_id}">${osbank.players[1].name}</a>:\n${osbank.secondsbank}К`, {parse_mode: "HTML"})
-    
-                            await ctx.scene.enter('topfcon')
-                        }else if (card_sectime.totbank == 300) {
-                            let minmony = card_sectime.frstsbank - 60;
+                            setTimeout(async () => {
+                                await ctx.tg.sendMessage(osbank.chat_id, `Банк участника - <a href="tg://user?id=${osbank.players[0].user_id}">${osbank.players[0].name}</a>:\n${osbank.frstsbank}К\n\nБанк участника - <a href="tg://user?id=${osbank.players[1].user_id}">${osbank.players[1].name}</a>:\n${osbank.secondsbank}К`, {parse_mode: "HTML"})
+                                await ctx.scene.enter('topfcon')
+                            }, 2000)
+                        } else if(card_sectime.spr == './30M.png') {
+                            let minmony = card_sectime.frstsbank - 30;
                             await collection.findOneAndUpdate({chat_id: card_sectime.chat_id}, {$set: {frstsbank: minmony}})
                             let osbank = await collection.findOne({chat_id: card_sectime.chat_id})
-                            await ctx.tg.sendMessage(osbank.chat_id, `Банк участника - <a href="tg://user?id=${osbank.players[0].user_id}">${osbank.players[0].name}</a>:\n${osbank.frstsbank}К\n\nБанк участника - <a href="tg://user?id=${osbank.players[1].user_id}">${osbank.players[1].name}</a>:\n${osbank.secondsbank}К`, {parse_mode: "HTML"})
-    
-                            await ctx.scene.enter('topfcon')
+                            setTimeout(async () => {
+                                await ctx.tg.sendMessage(osbank.chat_id, `Банк участника - <a href="tg://user?id=${osbank.players[0].user_id}">${osbank.players[0].name}</a>:\n${osbank.frstsbank}К\n\nБанк участника - <a href="tg://user?id=${osbank.players[1].user_id}">${osbank.players[1].name}</a>:\n${osbank.secondsbank}К`, {parse_mode: "HTML"}) 
+                                await ctx.scene.enter('topfcon')                            
+                            }, 2000)
                         }else {
-                            let minmony = card_sectime.frstsbank - 100;
+                            let minmony = card_sectime.frstsbank - 50;
                             await collection.findOneAndUpdate({chat_id: card_sectime.chat_id}, {$set: {frstsbank: minmony}})
                             let osbank = await collection.findOne({chat_id: card_sectime.chat_id})
-                            await ctx.tg.sendMessage(osbank.chat_id, `Банк участника - <a href="tg://user?id=${osbank.players[0].user_id}">${osbank.players[0].name}</a>:\n${osbank.frstsbank}К\n\nБанк участника - <a href="tg://user?id=${osbank.players[1].user_id}">${osbank.players[1].name}</a>:\n${osbank.secondsbank}К`, {parse_mode: "HTML"})
-    
-                            await ctx.scene.enter('topfcon')
-                        }                        
+                            setTimeout(async () => {
+                                await ctx.tg.sendMessage(osbank.chat_id, `Банк участника - <a href="tg://user?id=${osbank.players[0].user_id}">${osbank.players[0].name}</a>:\n${osbank.frstsbank}К\n\nБанк участника - <a href="tg://user?id=${osbank.players[1].user_id}">${osbank.players[1].name}</a>:\n${osbank.secondsbank}К`, {parse_mode: "HTML"})
+                                await ctx.scene.enter('topfcon')
+                            }, 2000)
+                        }
                     }
                 }, 3000)
             }else if(chts != null) {
                 await ctx.tg.sendMessage(chts.chat_id, 'Пришло время показать карты обеих участников...');
                 let card = await collection.findOne({secondchatid: chts.secondchatid})
                 let card_sectime = await collection.findOne({chat_id: card.chat_id})
-                setTimeout(async () => {
-                    await ctx.tg.sendPhoto(card.chat_id, {source: card.fpr}, {parse_mode: "HTML", caption: `🃏 Карта первого участника - <a href="tg://user?id=${card.players[0].user_id}">${card.players[0].name}</a>`})
-                    await ctx.tg.sendPhoto(card.chat_id, {source: card.spr}, {parse_mode: "HTML", caption: `🃏 Карта первого участника - <a href="tg://user?id=${card.players[1].user_id}">${card.players[1].name}</a>`})
-                    if(card.fpr == './M.png') {
-                        await ctx.tg.sendMessage(card.chat_id, `🥇 Победитель:\n<a href="tg://user?id=${card.players[0].user_id}">${card.players[0].name}</a>`, {parse_mode: "HTML"})
-                        if (card_sectime.totbank == 100) {
+                await setTimeout(async () => {
+                    await ctx.tg.sendPhoto(card.chat_id, {source: card.fpr}, {parse_mode: "HTML", caption: `🃏 Карта первого участника - <a href="tg://user?id=${card.players[0].user_id}">${card.players[0].name}</a>`})                       
+                    await ctx.tg.sendPhoto(card.chat_id, {source: card.spr}, {parse_mode: "HTML", caption: `🃏 Карта второго участника - <a href="tg://user?id=${card.players[1].user_id}">${card.players[1].name}</a>`})                    
+                    if(card_sectime.fpr == './20M.png' || card_sectime.fpr == './30M.png' || card_sectime.fpr == './50M.png') {
+                        await ctx.tg.sendMessage(card.chat_id, `💸 Победитель раунда:\n<a href="tg://user?id=${card.players[0].user_id}">${card.players[0].name}</a>`, {parse_mode: "HTML"})
+                        
+                        if (card_sectime.fpr == './20M.png') {
                             let minmony = card_sectime.secondsbank - 20;
                             await collection.findOneAndUpdate({chat_id: card_sectime.chat_id}, {$set: {secondsbank: minmony}})
                             let osbank = await collection.findOne({chat_id: card_sectime.chat_id})
-                            await ctx.tg.sendMessage(osbank.chat_id, `Банк участника - <a href="tg://user?id=${osbank.players[1].user_id}">${osbank.players[1].name}</a>:\n${osbank.secondsbank}К\n\nБанк участника - <a href="tg://user?id=${osbank.players[0].user_id}">${osbank.players[0].name}</a>:\n${osbank.frstsbank}К`, {parse_mode: "HTML"})
-    
-                            await ctx.scene.enter('topfcon')
-                        }else if (card_sectime.totbank == 300) {
-                            let minmony = card_sectime.secondsbank - 60;
+                            setTimeout(async () => {
+                                await ctx.tg.sendMessage(osbank.chat_id, `Банк участника - <a href="tg://user?id=${osbank.players[1].user_id}">${osbank.players[1].name}</a>:\n${osbank.secondsbank}К\n\nБанк участника - <a href="tg://user?id=${osbank.players[0].user_id}">${osbank.players[0].name}</a>:\n${osbank.frstsbank}К`, {parse_mode: "HTML"})
+                                await ctx.scene.enter('topfcon')
+                            }, 2000)
+                        } else if(card_sectime.fpr == './30M.png') {
+                            let minmony = card_sectime.secondsbank - 30;
                             await collection.findOneAndUpdate({chat_id: card_sectime.chat_id}, {$set: {secondsbank: minmony}})
                             let osbank = await collection.findOne({chat_id: card_sectime.chat_id})
-                            await ctx.tg.sendMessage(osbank.chat_id, `Банк участника - <a href="tg://user?id=${osbank.players[1].user_id}">${osbank.players[1].name}</a>:\n${osbank.secondsbank}К\n\nБанк участника - <a href="tg://user?id=${osbank.players[0].user_id}">${osbank.players[0].name}</a>:\n${osbank.frstsbank}К`, {parse_mode: "HTML"})
-    
-                            await ctx.scene.enter('topfcon')
+                            setTimeout(async () => {
+                                await ctx.tg.sendMessage(osbank.chat_id, `Банк участника - <a href="tg://user?id=${osbank.players[1].user_id}">${osbank.players[1].name}</a>:\n${osbank.secondsbank}К\n\nБанк участника - <a href="tg://user?id=${osbank.players[0].user_id}">${osbank.players[0].name}</a>:\n${osbank.frstsbank}К`, {parse_mode: "HTML"})
+                                await ctx.scene.enter('topfcon')
+                            }, 2000) 
                         }else {
-                            let minmony = card_sectime.secondsbank - 100;
+                            let minmony = card_sectime.secondsbank - 50;
                             await collection.findOneAndUpdate({chat_id: card_sectime.chat_id}, {$set: {secondsbank: minmony}})
                             let osbank = await collection.findOne({chat_id: card_sectime.chat_id})
-                            await ctx.tg.sendMessage(osbank.chat_id, `Банк участника - <a href="tg://user?id=${osbank.players[1].user_id}">${osbank.players[1].name}</a>:\n${osbank.secondsbank}К\n\nБанк участника - <a href="tg://user?id=${osbank.players[0].user_id}">${osbank.players[0].name}</a>:\n${osbank.frstsbank}К`, {parse_mode: "HTML"})
-    
-                            await ctx.scene.enter('topfcon')
+                            setTimeout(async () => {
+                                await ctx.tg.sendMessage(osbank.chat_id, `Банк участника - <a href="tg://user?id=${osbank.players[1].user_id}">${osbank.players[1].name}</a>:\n${osbank.secondsbank}К\n\nБанк участника - <a href="tg://user?id=${osbank.players[0].user_id}">${osbank.players[0].name}</a>:\n${osbank.frstsbank}К`, {parse_mode: "HTML"})
+                                await ctx.scene.enter('topfcon')
+                            }, 2000)
                         }
                     }else {
-                        await ctx.tg.sendMessage(card.chat_id, `🥇 Победитель:\n<a href="tg://user?id=${card.players[1].user_id}">${card.players[1].name}</a>`, {parse_mode: "HTML"})
-                        if (card_sectime.totbank == 100) {
+                        await ctx.tg.sendMessage(card.chat_id, `💸 Победитель раунда:\n<a href="tg://user?id=${card.players[1].user_id}">${card.players[1].name}</a>`, {parse_mode: "HTML"})
+    
+                        if (card_sectime.spr == './20M.png') {
                             let minmony = card_sectime.frstsbank - 20;
                             await collection.findOneAndUpdate({chat_id: card_sectime.chat_id}, {$set: {frstsbank: minmony}})
                             let osbank = await collection.findOne({chat_id: card_sectime.chat_id})
-                            await ctx.tg.sendMessage(osbank.chat_id, `Банк участника - <a href="tg://user?id=${osbank.players[0].user_id}">${osbank.players[0].name}</a>:\n${osbank.frstsbank}К\n\nБанк участника - <a href="tg://user?id=${osbank.players[1].user_id}">${osbank.players[1].name}</a>:\n${osbank.secondsbank}К`, {parse_mode: "HTML"})
-    
-                            await ctx.scene.enter('topfcon')
-                        }else if (card_sectime.totbank == 300) {
-                            let minmony = card_sectime.frstsbank - 60;
+                            setTimeout(async () => {
+                                await ctx.tg.sendMessage(osbank.chat_id, `Банк участника - <a href="tg://user?id=${osbank.players[0].user_id}">${osbank.players[0].name}</a>:\n${osbank.frstsbank}К\n\nБанк участника - <a href="tg://user?id=${osbank.players[1].user_id}">${osbank.players[1].name}</a>:\n${osbank.secondsbank}К`, {parse_mode: "HTML"})
+                                await ctx.scene.enter('topfcon')
+                            }, 2000)
+                        } else if(card_sectime.spr == './30M.png') {
+                            let minmony = card_sectime.frstsbank - 30;
                             await collection.findOneAndUpdate({chat_id: card_sectime.chat_id}, {$set: {frstsbank: minmony}})
                             let osbank = await collection.findOne({chat_id: card_sectime.chat_id})
-                            await ctx.tg.sendMessage(osbank.chat_id, `Банк участника - <a href="tg://user?id=${osbank.players[0].user_id}">${osbank.players[0].name}</a>:\n${osbank.frstsbank}К\n\nБанк участника - <a href="tg://user?id=${osbank.players[1].user_id}">${osbank.players[1].name}</a>:\n${osbank.secondsbank}К`, {parse_mode: "HTML"})
-    
-                            await ctx.scene.enter('topfcon')
+                            setTimeout(async () => {
+                                await ctx.tg.sendMessage(osbank.chat_id, `Банк участника - <a href="tg://user?id=${osbank.players[0].user_id}">${osbank.players[0].name}</a>:\n${osbank.frstsbank}К\n\nБанк участника - <a href="tg://user?id=${osbank.players[1].user_id}">${osbank.players[1].name}</a>:\n${osbank.secondsbank}К`, {parse_mode: "HTML"})
+                                await ctx.scene.enter('topfcon')
+                            }, 2000)
                         }else {
-                            let minmony = card_sectime.frstsbank - 100;
+                            let minmony = card_sectime.frstsbank - 50;
                             await collection.findOneAndUpdate({chat_id: card_sectime.chat_id}, {$set: {frstsbank: minmony}})
                             let osbank = await collection.findOne({chat_id: card_sectime.chat_id})
-                            await ctx.tg.sendMessage(osbank.chat_id, `Банк участника - <a href="tg://user?id=${osbank.players[0].user_id}">${osbank.players[0].name}</a>:\n${osbank.frstsbank}К\n\nБанк участника - <a href="tg://user?id=${osbank.players[1].user_id}">${osbank.players[1].name}</a>:\n${osbank.secondsbank}К`, {parse_mode: "HTML"})
-    
-                            await ctx.scene.enter('topfcon')
+                            setTimeout(async () => {
+                                await ctx.tg.sendMessage(osbank.chat_id, `Банк участника - <a href="tg://user?id=${osbank.players[0].user_id}">${osbank.players[0].name}</a>:\n${osbank.frstsbank}К\n\nБанк участника - <a href="tg://user?id=${osbank.players[1].user_id}">${osbank.players[1].name}</a>:\n${osbank.secondsbank}К`, {parse_mode: "HTML"})         
+                                await ctx.scene.enter('topfcon')                   
+                            }, 2000)
                         }
                     }
                 }, 3000)
@@ -524,18 +627,32 @@ leaves.enter(async ctx => {
         let res = await rest.rooms - 1;
         await collection.findOneAndUpdate({_id: ObjectId('636e7752c7ac7456a91fb889')}, {$set: {rooms: res}});
         let cht = await collection.findOne({firschatid: ctx.chat.id});
-        let chts = await collection.findOne({secondchatid: ctx.chat.id});    
-        if(cht != null) {
-            await ctx.tg.sendMessage(cht.chat_id, '🎮 Игра окончена\n➖➖➖➖➖➖➖➖➖➖\nЧтобы начать новую игру -> /newgame')
-            await collection.findOneAndDelete({chat_id: cht.chat_id})
-            await ctx.scene.leave("leaves")
-        }else if(chts != null) {
-            await ctx.tg.sendMessage(chts.chat_id, '🎮 Игра окончена\n➖➖➖➖➖➖➖➖➖➖\nЧтобы начать новую игру -> /newgame')
-            await collection.findOneAndDelete({chat_id: chts.chat_id})
-            await ctx.scene.leave("leaves")
-        }else {
-            return
-        }   
+        let chts = await collection.findOne({secondchatid: ctx.chat.id});   
+        setTimeout(async () => {
+            if(cht != null) {
+                if (cht.frstsbank <= 0) {
+                    await ctx.tg.sendMessage(cht.chat_id, `Игра окончена!\nПобедитель:\n<a href="tg://user?id=${cht.players[1].user_id}">${cht.players[1].name}</a> - 🥇\n\nЧтобы начать новую игру -> /newgame`, {parse_mode: "HTML"})
+                }else if(cht.secondsbank <= 0) {
+                    await ctx.tg.sendMessage(cht.chat_id, `Игра окончена!\nПобедитель:\n<a href="tg://user?id=${cht.players[0].user_id}">${cht.players[0].name}</a> - 🥇\n\nЧтобы начать новую игру -> /newgame`, {parse_mode: "HTML"})
+                }else {
+                    console.log('БАААААААААААААААААААААААААААААААААААААААААААААААААААААААААг');
+                }
+                await collection.findOneAndDelete({chat_id: cht.chat_id})
+                await ctx.scene.leave("leaves")
+            }else if(chts != null) {
+                if (chts.frstsbank <= 0) {
+                    await ctx.tg.sendMessage(chts.chat_id, `Игра окончена!\nПобедитель:\n<a href="tg://user?id=${chts.players[1].user_id}">${chts.players[1].name}</a> - 🥇\n\nЧтобы начать новую игру -> /newgame`, {parse_mode: "HTML"})
+                }else if(chts.secondsbank <= 0) {
+                    await ctx.tg.sendMessage(chts.chat_id, `Игра окончена!\nПобедитель:\n<a href="tg://user?id=${chts.players[0].user_id}">${chts.players[0].name}</a> - 🥇\n\nЧтобы начать новую игру -> /newgame`, {parse_mode: "HTML"})
+                }else {
+                    console.log('БАААААААААААААААААААААААААААААААААААААААААААААААААААААААААг');
+                }
+                await collection.findOneAndDelete({chat_id: chts.chat_id})
+                await ctx.scene.leave("leaves")
+            }else {
+                return
+            }              
+        }, 2000);    
     }catch(e) {
         console.error(e);
     }
@@ -651,7 +768,6 @@ bot.action('stgame', async ctx => {
         console.error(e);  
     }
 })
-
 
 bot.start(async ctx => {
     try {
@@ -797,42 +913,6 @@ bot.action('fivezerozero', async ctx => {
         console.error(e);
     }
 })
-
-// bot.action('joinnext', async ctx => {
-//     try {
-//         let findch = await collection.findOne({chat_id: ctx.chat.id});
-//         let editedmsg = await ctx.telegram.editMessageCaption(ctx.chat.id, findch.tst, ctx.callbackQuery.inline_message_id, `...`, {
-//             ...Markup.inlineKeyboard([[Markup.button.url('🔁 Присоединиться', 'https://t.me/cheatandtake_bot?start=G')]])
-//         })
-//         await collection.findOneAndUpdate({chat_id: ctx.chat.id}, {$set: {tst: editedmsg.message_id}})
-//         bot.start(async (ctxx) => {
-//             let useringame = await collection.findOne({players: {user_name: ctxx.message.from.username, user_id: ctxx.message.from.id, perschat: ctxx.chat.id, name: ctxx.message.from.first_name}})
-//             if (useringame == null) {
-//                 await collection.findOneAndUpdate({chat_id: ctx.chat.id}, {$push: {players: {user_name: ctxx.message.from.username, user_id: ctxx.message.from.id, perschat: ctxx.chat.id, name: ctxx.message.from.first_name}}})
-//                 let sfin = await collection.findOne({chat_id: ctx.chat.id});
-//                 let getcmem = await ctxx.tg.getChatMember(sfin.chat_id, ctxx.message.from.id)
-//                 if(getcmem) {
-//                     await ctxx.replyWithHTML(`Вы присоеденились к игре: <b>${ctx.chat.title}</b>`)
-//                 }else {
-//                     return
-//                 }
-//                 if(sfin.players.length == 1) {
-//                     await ctx.telegram.editMessageCaption(ctx.chat.id, sfin.tst, ctx.callbackQuery.inline_message_id, `Игроки:\n@${sfin.players[0].user_name}`, {
-//                         ...Markup.inlineKeyboard([[Markup.button.url('🔁 Присоединиться', 'https://t.me/cheatandtake_bot?start=G')]])})
-//                     await collection.findOneAndUpdate({chat_id: ctx.chat.id}, {$set: {firschatid: ctxx.chat.id}})
-//                 }else {
-//                     ctx.scene.enter("game")
-//                     await collection.findOneAndUpdate({chat_id: ctx.chat.id}, {$set: {secondchatid: ctxx.chat.id}})
-//                 }    
-//             }else {
-//                 await ctxx.reply('Вы уже участвуете...')
-//             }      
-//         }) 
-//     }catch(e) {
-//         console.error(e);
-//     }  
-// })   
-
 
 bot.action("non", async ctx => {
     try {
