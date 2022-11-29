@@ -332,7 +332,7 @@ results.enter(async ctx => {
         let cht = await collection.findOne({firschatid: ctx.chat.id});
         let chts = await collection.findOne({secondchatid: ctx.chat.id});    
         if(cht != null) {
-            await ctx.tg.sendMessage(cht.chat_id, 'Пришло время показать карты обеих участников...');
+            await ctx.tg.sendMessage(cht.chat_id, 'Пришло время показать карты обоих участников...');
             let card = await collection.findOne({firschatid: cht.firschatid})
             setTimeout(async () => {
                 await ctx.tg.sendPhoto(card.chat_id, {source: card.spr}, {parse_mode: "HTML", caption: `🃏 Карта первого участника - <a href="tg://user?id=${card.players[0].user_id}">${card.players[0].name}</a>`})                    
@@ -411,7 +411,7 @@ results.enter(async ctx => {
                 }
             }, 3000)
         }else if(chts != null) {
-            await ctx.tg.sendMessage(chts.chat_id, 'Пришло время показать карты обеих участников...');
+            await ctx.tg.sendMessage(chts.chat_id, 'Пришло время показать карты обоих участников...');
             let card = await collection.findOne({secondchatid: chts.secondchatid})
             setTimeout(async () => {
                 await ctx.tg.sendPhoto(card.chat_id, {source: card.spr}, {parse_mode: "HTML", caption: `🃏 Карта первого участника - <a href="tg://user?id=${card.players[0].user_id}">${card.players[0].name}</a>`})                    
@@ -504,7 +504,7 @@ resultsnon.enter(async ctx => {
             let cht = await collection.findOne({firschatid: ctx.chat.id});
             let chts = await collection.findOne({secondchatid: ctx.chat.id}); 
             if(cht != null) {
-                await ctx.tg.sendMessage(cht.chat_id, 'Пришло время показать карты обеих участников...');
+                await ctx.tg.sendMessage(cht.chat_id, 'Пришло время показать карты обоих участников...');
                 let card = await collection.findOne({firschatid: cht.firschatid})
                 let card_sectime = await collection.findOne({chat_id: card.chat_id})
                 await setTimeout(async () => {
@@ -581,7 +581,7 @@ resultsnon.enter(async ctx => {
                     }
                 }, 3000)
             }else if(chts != null) {
-                await ctx.tg.sendMessage(chts.chat_id, 'Пришло время показать карты обеих участников...');
+                await ctx.tg.sendMessage(chts.chat_id, 'Пришло время показать карты обоих участников...');
                 let card = await collection.findOne({secondchatid: chts.secondchatid})
                 let card_sectime = await collection.findOne({chat_id: card.chat_id})
                 await setTimeout(async () => {
@@ -772,12 +772,15 @@ bot.command('skip', async ctx => {
                 await ctx.reply('Я не обнаружил игру в данной группе...');
             }else {
                 let quatofsk = await collection.findOne({chat_id: ctx.chat.id})
-                if(quatofsk.quatofsk == undefined) {
-                    await ctx.scene.enter('quiz')
-                }else {
-                    await ctx.reply("Ожидайте выбор соперника...")
+                if (quatofsk.players[0].user_id == ctx.from.id || quatofsk.players[0].user_id == ctx.from.id) {
+                    if(quatofsk.quatofsk == undefined) {
+                        await ctx.scene.enter('quiz')
+                    }else {
+                        await ctx.reply("Ожидайте выбор соперника...")
+                    }
+                } else {
+                    await ctx.replyWithHTML(`<a href="tg://user?id=${ctx.from.id}">${ctx.from.username}</a>, вы не участвуете в игре!`)
                 }
-                
             }
         }else {
             await ctx.reply('Используйте даную команду в групповом чате');
