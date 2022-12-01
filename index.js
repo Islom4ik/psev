@@ -172,7 +172,7 @@ topfcon.enter(async (ctx) => {
                 let whoview = await getRandomArbitrary(0, 1);
                 let randommoneyc = await getRandomArbitrary(0, 2)
                 let roundscount = findch.round + 1;
-                if (roundscount == 2 && findch.allin == false) {
+                if (roundscount == 6 && findch.allin == false) {
                     await ctx.scene.enter('allin')
                 }else {
                     await collection.findOneAndUpdate({chat_id: findch.chat_id}, {$set: {round: roundscount}})
